@@ -6,7 +6,7 @@
 
 | サービス | 管理状況 | 説明・関連Issue |
 | --- | --- | --- |
-| BvlionBatch5 | 管理中。実装・設定はリポジトリルートに配置 | メール処理・記念日通知などを提供するXServer上のHTTP API。[専用README](docs/BvlionBatch5/README.md) |
+| cadence-xs | 管理中。`cadence-xs/`に配置 | メール処理・記念日通知などを提供するXServer上のHTTP API。[専用README](cadence-xs/README.md) |
 | dialogflow-functions | 今後統合予定 | [Issue #84](https://github.com/bvlion/home-et-cetera/issues/84)で扱います |
 | BvlionBatch3 | 今後統合予定 | [Issue #85](https://github.com/bvlion/home-et-cetera/issues/85)で扱います |
 | Quick Ask | 今後移行予定 | 別Issueで扱います |
@@ -18,32 +18,30 @@
 | 配置 | 役割 |
 | --- | --- |
 | `README.md`、`AGENTS.md` | リポジトリ全体の説明・共通作業ルール |
-| `docs/BvlionBatch5/` | BvlionBatch5専用の説明・作業ルール |
-| `bin/`、`bootstrap/`、`database/`、`public/`、`resources/`、`src/`、`tests/` | BvlionBatch5の実装・データベース定義・検証 |
-| `composer.*`、`phpcs.xml`、`phpunit.xml` | BvlionBatch5の依存関係・検証設定 |
-| `docker/`、`compose*.yaml`、`Makefile`、`.dockerignore`、`.env.example` | BvlionBatch5のローカル開発・検証設定 |
-| `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml` | BvlionBatch5の検証・本番デプロイ |
-| `.github/dependabot.yml` | BvlionBatch5のComposer依存関係とGitHub Actionsの更新設定 |
-| `docs/production-environment.md`、`docs/legacy-data-migration.md`、`docs/legacy-db.env.example` | BvlionBatch5の本番環境・旧環境データ移行資料 |
+| `cadence-xs/README.md`、`cadence-xs/AGENTS.md` | cadence-xs専用の説明・作業ルール |
+| `cadence-xs/` | cadence-xsの実装・依存関係・データベース定義・ローカル開発・検証設定 |
+| `cadence-xs/docs/` | cadence-xsの本番環境・旧環境データ移行資料 |
+| `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml` | cadence-xsの検証・本番デプロイ |
+| `.github/dependabot.yml` | cadence-xsのComposer依存関係とGitHub Actionsの更新設定 |
 
-BvlionBatch5の実装・設定は既存の配置を維持しています。開発・検証・デプロイ手順は[専用README](docs/BvlionBatch5/README.md)を参照してください。ルートの`make check`と`v*`タグによる本番デプロイはBvlionBatch5用です。
+開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`v*`タグによる本番デプロイはcadence-xs用です。
 
 ## サービスを追加する方針
 
 - 追加・統合はサービスごとのIssueで行い、サービスごとのディレクトリに配置します。具体的な配置は対象Issueで決めます。
 - 各サービスのREADME.mdに役割・実行環境・開発・検証・デプロイ手順を記載し、AGENTS.mdに固有の作業ルールを記載します。
-- サービスの依存関係・設定・検証・デプロイを個別に管理し、BvlionBatch5のSlim 4・PDO・Docker・XServerの方針を他サービスの要件にはしません。
+- サービスの依存関係・設定・検証・デプロイを個別に管理し、cadence-xsのSlim 4・PDO・Docker・XServerの方針を他サービスの要件にはしません。
 - サービスを追加した際は、このREADMEのサービス一覧と構成を更新します。
 
 ## リポジトリ名
 
-リポジトリ名は`home-et-cetera`です。Issue #69で、BvlionBatch5専用だった旧名称から家庭内サービス全体を表す名称へ変更しました。BvlionBatch5のサービス名・実行設定は維持します。
+リポジトリ名は`home-et-cetera`です。Issue #69で、BvlionBatch5専用だった旧名称から家庭内サービス全体を表す名称へ変更しました。Issue #87でBvlionBatch5のサービス名を`cadence-xs`へ変更し、実装・設定を同名ディレクトリへ移しました。XServerの実行基盤と`v*`タグによるデプロイ方式は維持します。
 
-既存のcloneでは、`origin`を`https://github.com/bvlion/home-et-cetera.git`へ更新してください。本番checkoutも同じ対象ですが、更新は利用者が既存の配置で行います。アプリの配置先・公開先・GitHub Secretsを名称に合わせて変更する必要はありません。
+旧リポジトリ名を使用しているcloneでは、`origin`を`https://github.com/bvlion/home-et-cetera.git`へ更新してください。本番checkoutも同じ対象ですが、更新は利用者が既存の配置で行います。checkout先・公開先・GitHub Secretsは維持します。Issue #87の配置変更では、`.env`の配置、公開用`index.php`のリンク先、既存ローカルDBの引き継ぎが影響を受けます。[専用README](cadence-xs/README.md)の切り替え手順を参照してください。
 
 ## 開発運用
 
-共通ルールは[AGENTS.md](AGENTS.md)、BvlionBatch5固有のルールは[専用AGENTS.md](docs/BvlionBatch5/AGENTS.md)を参照してください。
+共通ルールは[AGENTS.md](AGENTS.md)、cadence-xs固有のルールは[専用AGENTS.md](cadence-xs/AGENTS.md)を参照してください。
 
 - 1つのIssueにつき、1つのブランチと1つのPRを作成します。
 - PRはユーザーの明示的な承認を得るまでマージしません。

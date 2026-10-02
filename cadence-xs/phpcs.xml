@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="BvlionBatch5">
-    <description>BvlionBatch5 coding standard</description>
+<ruleset name="cadence-xs">
+    <description>cadence-xs coding standard</description>
 
     <arg name="basepath" value="."/>
     <arg name="colors"/>

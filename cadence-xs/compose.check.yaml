@@ -11,7 +11,7 @@
 # - app の vendor volumeも開発用と共有しない
 # - 実 .env を読み込まない。Makefileが `.env.example` を `/app/.env` へ
 #   read-only で重ね、Composeの変数展開にも `--env-file .env.example` を
-#   使用するため、リポジトリルートに実 `.env` が存在していても読み込まない
+#   使用するため、サービスディレクトリに実 `.env` が存在していても読み込まない
 #
 # app・database の build・環境変数・healthcheckは、検証結果が開発環境と
 # 不必要に乖離しないよう compose.yaml と揃えている。

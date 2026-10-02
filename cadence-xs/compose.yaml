@@ -1,3 +1,5 @@
+name: cadence-xs
+
 services:
   app:
     build:

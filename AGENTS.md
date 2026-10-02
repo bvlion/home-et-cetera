@@ -5,22 +5,20 @@
 ## リポジトリの目的とサービスの分離
 
 - このリポジトリは、複数の個人・家庭内向けサービスを管理するモノレポです。
-- 各サービスの実行基盤・言語・アーキテクチャ・デプロイ方式はサービスごとに管理します。BvlionBatch5の技術・運用方針を他サービスへ適用しません。
+- 各サービスの実行基盤・言語・アーキテクチャ・デプロイ方式はサービスごとに管理します。cadence-xsの技術・運用方針を他サービスへ適用しません。
 - サービスの追加・統合は、それぞれのIssueで明示された範囲で行います。
 - 追加サービスはサービスごとのディレクトリへ配置し、そのREADME.mdとAGENTS.mdに役割・実行環境・作業ルールを記載します。具体的な構成は対象Issueで決めます。
 
-## BvlionBatch5のルールの適用範囲
+## cadence-xsのルールの適用範囲
 
-BvlionBatch5に関する作業では、必ず[専用AGENTS.md](docs/BvlionBatch5/AGENTS.md)を読み、共通ルールと併せて適用してください。既存の実行・デプロイを維持するため、BvlionBatch5の実装・設定は引き続きルートにあります。
+cadence-xsに関する作業では、必ず[専用AGENTS.md](cadence-xs/AGENTS.md)を読み、共通ルールと併せて適用してください。
 
-専用ルールは次のBvlionBatch5の対象に適用します。
+専用ルールは`cadence-xs/`配下の実装・設定・検証・関連文書と、次のリポジトリ共通配置にあるcadence-xs用の設定に適用します。
 
-- `bin/`、`bootstrap/`、`database/`、`docker/`、`public/`、`resources/`、`src/`、`tests/`
-- `composer.json`、`composer.lock`、`phpcs.xml`、`phpunit.xml`、`Makefile`、`compose.yaml`、`compose.check.yaml`、`.dockerignore`、`.env.example`
-- `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml`、`.github/dependabot.yml`のComposer設定
-- `docs/BvlionBatch5/`、`docs/production-environment.md`、`docs/legacy-data-migration.md`、`docs/legacy-db.env.example`
+- `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml`
+- `.github/dependabot.yml`のComposer設定
 
-追加サービスのディレクトリや、そのサービス専用の設定・検証・デプロイにはBvlionBatch5専用ルールを適用しません。サービスごとのAGENTS.mdを参照してください。
+他サービスのディレクトリや、そのサービス専用の設定・検証・デプロイにはcadence-xs専用ルールを適用しません。サービスごとのAGENTS.mdを参照してください。
 
 ## 判断と実装
 

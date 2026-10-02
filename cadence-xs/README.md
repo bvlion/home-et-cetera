@@ -1,14 +1,17 @@
-# BvlionBatch5
+# cadence-xs
 
-この文書はBvlionBatch5専用の機能・開発・運用手順です。コマンドとファイルパスは、特記がない限りリポジトリルートを基準とします。リポジトリ全体の目的と構成は[ルートREADME](../../README.md)を参照してください。
+この文書はcadence-xs専用の機能・開発・運用手順です。コマンドとファイルパスは、特記がない限り`cadence-xs/`を基準とします。リポジトリ全体の目的と構成は[ルートREADME](../README.md)を参照してください。
 
-BvlionBatch5は、XServer上で動作する認証付きHTTP APIを提供するプロジェクトです。
+cadence-xsは、XServer上で動作する認証付きHTTP APIを提供するプロジェクトです。
+
+旧サービス名はBvlionBatch5です。PHPの名前空間`BvlionBatch5`は、既存コードの互換性を維持するため継続使用します。
+
+リポジトリルートから作業する場合は、最初に`cd cadence-xs`でサービスディレクトリへ移動してください。Git操作と`.github/`の設定はリポジトリ全体を対象とします。
 
 ## 提供する機能
 
 - メールの取得・Slack通知・振り分け
 - 記念日通知
-- スマートフォンから実行する定型Slack通知
 
 ## 技術方針
 
@@ -18,7 +21,7 @@ BvlionBatch5は、XServer上で動作する認証付きHTTP APIを提供する�
 - `/health`エンドポイントは実装しません。
 - 不要な抽象化、DIコンテナ、基底Repository、過剰なClean Architectureは導入しません。
 
-本番実行環境と配置構成は[本番実行環境](../production-environment.md)を参照してください。
+本番実行環境と配置構成は[本番実行環境](docs/production-environment.md)を参照してください。
 
 ## 環境設定
 
@@ -67,7 +70,7 @@ docker compose run --rm app composer migrate
 
 ## Slack App設定
 
-BvlionBatch5専用のSlack App・Botを1つだけ使用します。mail・datingの2機能は、同一の`SLACK_BOT_TOKEN`で投稿します。機能ごとに別のApp・Bot・Tokenは作成しません。
+cadence-xs専用のSlack App・Botを1つだけ使用します。mail・datingの2機能は、同一の`SLACK_BOT_TOKEN`で投稿します。機能ごとに別のApp・Bot・Tokenは作成しません。
 
 本番Slack Appは、次の手順で設定します。
 
@@ -86,12 +89,12 @@ BvlionBatch5専用のSlack App・Botを1つだけ使用します。mail・dating
 
 ### Bot Token漏洩時のローテーション
 
-Bot Tokenが漏洩した、または漏洩した疑いがある場合は、次の手順でBvlionBatch5専用Bot単位にローテーションします。実際のTokenやチャンネルIDはいかなる記録にも残しません。
+Bot Tokenが漏洩した、または漏洩した疑いがある場合は、次の手順でcadence-xs専用Bot単位にローテーションします。実際のTokenやチャンネルIDはいかなる記録にも残しません。
 
-1. Slack Appの管理画面で、BvlionBatch5用Bot Tokenを失効させます。
-2. BvlionBatch5用Slack Appを再認可し、新しいBot Tokenを発行します。
+1. Slack Appの管理画面で、cadence-xs用Bot Tokenを失効させます。
+2. cadence-xs用Slack Appを再認可し、新しいBot Tokenを発行します。
 3. 本番環境の`SLACK_BOT_TOKEN`を新しいTokenへ差し替えます(mail・datingの2機能は同じ環境変数を参照しているため、差し替えは1箇所で完了します)。
-4. 通知先とする各チャンネルへ、BvlionBatch5用Slack App・Botが参加した状態のままであることを確認します(`chat:write.public`を使わない構成のため、参加していないチャンネルには投稿できません)。
+4. 通知先とする各チャンネルへ、cadence-xs用Slack App・Botが参加した状態のままであることを確認します(`chat:write.public`を使わない構成のため、参加していないチャンネルには投稿できません)。
 5. `bin/check-slack.php`でSlackへの疎通を確認します(「実チャンネルへの疎通確認」節を参照)。
 
 実チャンネルへの疎通確認には`SLACK_BOT_TOKEN`と`SLACK_TEST_CHANNEL_ID`だけを使用します。DB、IMAP、Bearer Tokenなど、アプリ本体の他の環境変数は不要です。
@@ -192,7 +195,7 @@ docker compose run --rm --no-deps app php bin/check-imap.php
 
 PDF化・PDF投稿の詳細は次のとおりです。
 
-- Dompdfはリモート画像・外部CSS・Webフォントの取得を無効化(`isRemoteEnabled = false`)し、JavaScriptも実行しません(`isJavascriptEnabled = false`)。HTML内の`cid:`画像は対応するinline MIMEパートから、`http` / `https`画像はBvlionBatch5側で取得してdata URIへ置換してからDompdfへ渡します。それ以外のスキームは取得しません。
+- Dompdfはリモート画像・外部CSS・Webフォントの取得を無効化(`isRemoteEnabled = false`)し、JavaScriptも実行しません(`isJavascriptEnabled = false`)。HTML内の`cid:`画像は対応するinline MIMEパートから、`http` / `https`画像はcadence-xs側で取得してdata URIへ置換してからDompdfへ渡します。それ以外のスキームは取得しません。
 - 外部画像の取得前には名前解決結果がすべて公開IPアドレスであることを確認し、検証済みIPアドレスへ接続先を固定します。localhost、プライベートIP、リンクローカル、予約済みIPへのアクセスは拒否し、最大3回のリダイレクト先にも同じ検証を行います。接続タイムアウトは3秒、リダイレクトを含む1画像全体のタイムアウトは10秒です。取得対象は実データも画像と判定できる`image/gif`、`image/jpeg`、`image/png`、`image/webp`に限定し、1画像2,000,000バイト、メール全体4,000,000バイトを上限とします。取得または検証に失敗した画像は置換せず、本文のPDF化を継続します。
 - PDF内へ画像を描画するため、PHPのGD拡張を必須とします。
 - 日本語本文を表示するため、`resources/fonts/IPAexGothic`に同梱したIPAexゴシック(TrueType、IPAフォントライセンスv1.0)をDompdfへ登録します。XServerにインストール済みのフォントには依存しません。CFFアウトラインを持つOpenType(`.otf`)フォントはDompdfでの埋め込みが不安定なため使用せず、TrueType(`.ttf`)フォントのみを同梱しています。
@@ -225,7 +228,7 @@ Slack投稿時の表示名は、旧BvlionBatch4の`Mail#getSlackUserName()`と�
 
 ## 旧環境データの移行
 
-旧BvlionBatch4・旧HomeServerのデータを本番DBへ移行する手順は[旧環境データの移行](../legacy-data-migration.md)を参照してください。実データ・認証情報はリポジトリへ含めず、移行専用の作業ディレクトリで完結させます。
+旧環境のデータを本番DBへ移行する手順は[旧環境データの移行](docs/legacy-data-migration.md)を参照してください。実データ・認証情報はリポジトリへ含めず、移行専用の作業ディレクトリで完結させます。
 
 ## ローカル実行
 
@@ -260,7 +263,7 @@ docker compose run --rm app composer style
 docker compose run --rm app composer test
 ```
 
-Dockerはローカル開発でのみ使用します。本番環境はDocker化せず、XServerのPHP 8.5.5を使用します。詳細は[本番実行環境](../production-environment.md)を参照してください。
+Dockerはローカル開発でのみ使用します。本番環境はDocker化せず、XServerのPHP 8.5.5を使用します。詳細は[本番実行環境](docs/production-environment.md)を参照してください。
 
 ## 検証環境（`make check`）
 
@@ -270,16 +273,24 @@ Dockerはローカル開発でのみ使用します。本番環境はDocker化�
 make check
 ```
 
-- `make check`は`compose.check.yaml`を検証専用のCompose project（`bvlionbatch5-check`）で実行します。開発用`compose.yaml`が使うcontainer・network・volume・host port（8080番）とは別のprojectであり、開発用の`database` volumeを共有しません。検証用DBは検証専用の使い捨てvolumeを使用します。
+- `make check`は`compose.check.yaml`を検証専用のCompose project（`cadence-xs-check`）で実行します。開発用`compose.yaml`が使うcontainer・network・volume・host port（8080番）とは別のprojectであり、開発用の`database` volumeを共有しません。検証用DBは検証専用の使い捨てvolumeを使用します。
 - 検証用のappコンテナは実`.env`を読み込みません。`.env.example`の架空値だけを`/app/.env`へread-onlyで重ね、Composeの変数展開にも`--env-file .env.example`を使用します。
-- 成功・失敗にかかわらず、`make check`終了時に検証専用project（`bvlionbatch5-check`）のcontainer・network・volumeだけをcleanupします。開発中の`compose.yaml`側のcontainer・DBには一切影響しません。
-- GitHub Actions（`.github/workflows/ci.yaml`）も同じ`make check`を使用します。
+- 成功・失敗にかかわらず、`make check`終了時に検証専用project（`cadence-xs-check`）のcontainer・network・volumeだけをcleanupします。開発中の`compose.yaml`側のcontainer・DBには一切影響しません。
+- GitHub Actions（リポジトリルートの`.github/workflows/ci.yaml`）も`cadence-xs/`で同じ`make check`を使用します。リポジトリルートからは`make -C cadence-xs check`を実行します。
 
 `make check`が異常終了してcleanupが行われなかった場合は、検証専用projectだけを対象に手動でcleanupできます。
 
 ```shell
 make check-clean
 ```
+
+### 配置変更後の既存ローカル環境
+
+開発用Compose project名は`cadence-xs`に固定し、`make db-wipe`も同じprojectだけを対象にします。旧配置のproject名は、明示指定がなければcheckoutディレクトリ名に依存していました。旧container・network・volumeは自動で移行・削除しません。
+
+利用者は既存の`.env`を`cadence-xs/.env`へ安全に移し、権限を維持してください。旧開発環境を使用している場合は、既存projectと`database` volumeを確認し、必要なデータを非公開の場所へバックアップしてから、旧環境をvolumeを残して停止し、新しいprojectへ復元してください。旧環境が8080番を使用したままでは新環境を起動できません。project名を変更しただけでは既存DBデータは引き継がれず、新しい`cadence-xs_database` volumeが作られます。DB名などの設定は既存`.env`を引き継ぎます。
+
+`vendor` volumeも別になるため、新配置で`composer install`を実行してください。旧volumeは復元・動作確認が済むまで保持し、削除を移行手順に含めません。既存projectの明示指定や`COMPOSE_PROJECT_NAME`を継続すると固定名を上書きするため、通常の開発と`db-wipe`の対象を`cadence-xs`へ合わせてください。
 
 ## 開発用データベースの永続化と初期化
 
@@ -300,7 +311,7 @@ make db-wipe CONFIRM=yes
 ### 配置の考え方
 
 - ドメインのドキュメントルート(`public_html`)は固定であり、変更できません。ここには公開してよいファイルだけを置きます。
-- アプリ本体(`bootstrap`、`src`、`vendor`、`composer.*`、`database`、`bin`、`.env`など)は、アカウントホーム配下かつ`public_html`外の専用ディレクトリへ配置します。以下ではこのディレクトリを`<app-directory>`と表記します。実際の絶対パスはリポジトリへ記載しません。
+- リポジトリcheckoutは、アカウントホーム配下かつ`public_html`外へ配置します。以下ではcheckoutのルートを`<checkout-directory>`、サービス本体の`<checkout-directory>/cadence-xs`を`<app-directory>`と表記します。アプリ本体(`bootstrap`、`src`、`vendor`、`composer.*`、`database`、`bin`、`.env`など)は`<app-directory>`内にあります。実際の絶対パスはリポジトリへ記載しません。
 - `public_html`には次の2つだけを配置します。
   - `index.php`: `<app-directory>/public/index.php`へのシンボリックリンク
   - `.htaccess`: `<app-directory>/public/.htaccess`をコピーした通常ファイル
@@ -308,15 +319,15 @@ make db-wipe CONFIRM=yes
 
 ### 初回デプロイ
 
-1. SSHでログインし、`<app-directory>`を作成してリポジトリを取得します。
+1. SSHでログインし、`<checkout-directory>`を作成してリポジトリを取得します。
 
     ```shell
-    mkdir -p <app-directory>
-    cd <app-directory>
+    mkdir -p <checkout-directory>
+    cd <checkout-directory>
     git clone https://github.com/bvlion/home-et-cetera.git .
     ```
 
-2. 専用のComposerを、検証済みチェックサムでBvlionBatch5専用の非公開ツールディレクトリへ配置します。共有Composerは使用・更新しません。Composerの公式インストーラー検証手順に沿って、ダウンロード・SHA-384検証・インストール・後始末を1つのスクリプトで実行します。処理全体をサブシェル`( ... )`で囲んでいるため、途中で失敗しても現在のSSH接続(親シェル)は終了しません。ツールディレクトリの絶対パスは、貼り付け後の対話プロンプトで入力します(コマンド内に埋め込みません)。
+2. 専用のComposerを、検証済みチェックサムでcadence-xs専用の非公開ツールディレクトリへ配置します。共有Composerは使用・更新しません。Composerの公式インストーラー検証手順に沿って、ダウンロード・SHA-384検証・インストール・後始末を1つのスクリプトで実行します。処理全体をサブシェル`( ... )`で囲んでいるため、途中で失敗しても現在のSSH接続(親シェル)は終了しません。ツールディレクトリの絶対パスは、貼り付け後の対話プロンプトで入力します(コマンド内に埋め込みません)。
 
     ```shell
     (
@@ -403,12 +414,12 @@ make db-wipe CONFIRM=yes
 
 `v*`形式のタグをpushすると、GitHub Actions(`.github/workflows/deploy.yaml`)が次を自動実行します。実行内容は、以前手動で行っていた更新デプロイ手順と同じです。
 
-1. 本番の`<app-directory>`にtracked変更がないことを確認します。ある場合は上書き・resetせずデプロイを失敗させます。
+1. 本番の`<checkout-directory>`にtracked変更がないことを確認します。ある場合は上書き・resetせずデプロイを失敗させます。
 2. pushされたタグをfetchし、そのタグが最終的に指すcommit(軽量タグ・annotated tagのいずれでも同じ結果になります)へ本番checkoutを切り替えます。実行時点の`origin/main`は使用しません。
-3. `DEPLOY_COMPOSER_PATH`のBvlionBatch5専用Composerと`/opt/php-8.5.5/bin/php`を使い、`composer.lock`に基づいて`--no-dev --optimize-autoloader --classmap-authoritative`で本番依存をインストールします。
+3. `<checkout-directory>/cadence-xs`へ移動し、`DEPLOY_COMPOSER_PATH`のcadence-xs専用Composerと`/opt/php-8.5.5/bin/php`を使い、`composer.lock`に基づいて`--no-dev --optimize-autoloader --classmap-authoritative`で本番依存をインストールします。
 4. `/opt/php-8.5.5/bin/php bin/migrate.php`で未適用マイグレーションを適用します。
 5. `<app-directory>/public/.htaccess`を`public_html`側へ上書きコピーします。`index.php`のシンボリックリンクは初回作成時のものを再利用します。
-6. `bin/check-deploy-connectivity.sh`で3つのAPIへ未認証POSTを送り、すべてHTTP 401であることを確認します。1件でも401以外の場合はworkflow全体を失敗させます(「/healthに依存しない疎通確認」節の「1. 未認証確認」を参照)。
+6. runner上の`cadence-xs/bin/check-deploy-connectivity.sh`で2つのAPIへ未認証POSTを送り、すべてHTTP 401であることを確認します。1件でも401以外の場合はworkflow全体を失敗させます(「/healthに依存しない疎通確認」節の「1. 未認証確認」を参照)。
 
 本番の`.env`はworkflowから作成・コピー・上書き・削除しません。既存の`.env`をそのまま使用します。SSHの秘密鍵・接続先・絶対パス・本番URLなどの値は、いずれもGitHub Secretsから取得し、リポジトリへは記録しません。
 
@@ -430,20 +441,33 @@ git push origin v1.0.0
 | `DEPLOY_SSH_HOST` | XServerのSSH接続先ホスト |
 | `DEPLOY_SSH_PORT` | SSH接続ポート |
 | `DEPLOY_SSH_USER` | SSH接続ユーザー名 |
-| `DEPLOY_SSH_PRIVATE_KEY` | BvlionBatch5デプロイ専用のSSH秘密鍵 |
+| `DEPLOY_SSH_PRIVATE_KEY` | cadence-xsデプロイ専用のSSH秘密鍵 |
 | `DEPLOY_SSH_KNOWN_HOSTS` | 接続先のhost keyを検証するためのknown_hostsエントリ |
-| `DEPLOY_PATH` | 本番アプリ本体(`<app-directory>`)の絶対パス |
-| `DEPLOY_COMPOSER_PATH` | 本番に配置済みのBvlionBatch5専用Composer(`composer.phar`)の絶対パス |
+| `DEPLOY_PATH` | 本番リポジトリcheckoutのルート(`<checkout-directory>`)の絶対パス。`cadence-xs`は付けない |
+| `DEPLOY_COMPOSER_PATH` | 本番に配置済みのcadence-xs専用Composer(`composer.phar`)の絶対パス |
 | `DEPLOY_PUBLIC_PATH` | 公開ディレクトリ(`public_html`)の絶対パス |
 | `DEPLOY_BASE_URL` | デプロイ後の未認証疎通確認に使用する本番URL |
 
-`DEPLOY_PUBLIC_PATH`はIssue #60に列挙されていた既存Secret一覧には含まれていない追加のSecretです。`DEPLOY_PATH`はドキュメントルート外にあるアプリ本体(`<app-directory>`)の絶対パスであり、「配置の考え方」節のとおり公開ディレクトリ(`public_html`)とは別の場所にあるため、`DEPLOY_PATH`から`public_html`の絶対パスを安全に推測して組み立てることはできません。`public/.htaccess`を`public_html`側へ反映するために、公開ディレクトリの絶対パスを保持する専用のSecretとして追加しています。
+`DEPLOY_PUBLIC_PATH`はIssue #60に列挙されていた既存Secret一覧には含まれていない追加のSecretです。`DEPLOY_PATH`はドキュメントルート外にあるcheckoutのルートの絶対パスであり、「配置の考え方」節のとおり公開ディレクトリ(`public_html`)とは別の場所にあるため、`DEPLOY_PATH`から`public_html`の絶対パスを安全に推測して組み立てることはできません。`cadence-xs/public/.htaccess`を`public_html`側へ反映するために、公開ディレクトリの絶対パスを保持する専用のSecretとして追加しています。
+
+#### 旧ルート配置からの初回切り替え（Issue #87・利用者側の作業）
+
+この配置変更を含むタグを通常どおりpushする前に、利用者が本番の切り替えを行ってください。既存checkoutの絶対パス、専用Composerのパス、公開先、URL、GitHub Secrets、Slack App・Bot、DB、APIの認証値は継続利用します。サービス名変更だけを理由に再作成する必要はありません。
+
+1. 既存checkoutと公開用`index.php`のリンク先を確認し、非公開の場所へ既存`.env`を権限600でバックアップします。旧配置の安定commitも記録します。切り替え中は旧`public/index.php`が消えるため、停止を伴う作業時間を確保します。
+2. tracked変更がないことを確認し、配置変更を含むリリース対象commitをfetchしてcheckoutします。`git reset --hard`や`git clean`は使用しません。
+3. 旧checkoutルートの`.env`を`<checkout-directory>/cadence-xs/.env`へ安全に移し、権限600と本番設定を維持します。移行先に既存`.env`があれば上書きせず確認します。環境変数注入で運用している場合は、その設定が新配置の実行でも有効であることを確認します。
+4. `<app-directory>`で「初回デプロイ」の手順3・7に従い、既存専用Composerによる依存関係の導入とマイグレーションを実行します。旧ルートの`vendor`は新配置から参照されません。
+5. 公開用`index.php`が既存シンボリックリンクであることを確認してから、リンク先を`<app-directory>/public/index.php`へ張り替えます。通常ファイルや想定外のリンクなら上書きせず停止します。`.htaccess`は新しい`<app-directory>/public/.htaccess`から通常ファイルとしてコピーします。
+6. 「/healthに依存しない疎通確認」に従い、未認証の2 APIが401を返すことと、利用者が許可した機能確認を行います。以後の更新は従来の`v*`タグpushで行います。
+
+自動デプロイは`.env`の移動と`index.php`のリンクの張り替えを行いません。旧リンクのままでは未認証疎通確認が失敗します。旧配置のcommitへ戻す場合は、旧ルートの`.env`・そのcommitの依存関係・公開リンク・`.htaccess`も旧配置へ戻してください。旧DBデータの再importは、この配置変更には不要です。
 
 SSH host key verificationは`DEPLOY_SSH_KNOWN_HOSTS`を使って必ず有効な状態で行い、`StrictHostKeyChecking=no`等での無効化は行いません。
 
 #### 初回設定(利用者側の作業)
 
-1. BvlionBatch5デプロイ専用のSSH鍵ペアを作成します。
+1. cadence-xsデプロイ専用のSSH鍵ペアを作成します。
 2. 作成した公開鍵を、XServer側の対象アカウントのSSH認証(`~/.ssh/authorized_keys`)へ登録します。
 3. 上記の必要なGitHub Secretsをすべて登録します。
 4. `v*`形式のタグを作成・pushし、GitHub Actionsのデプロイが成功することを確認します。
