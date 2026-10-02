@@ -7,11 +7,11 @@
 | サービス | 管理状況 | 説明・関連Issue |
 | --- | --- | --- |
 | cadence-xs | 管理中。`cadence-xs/`に配置 | メール処理・記念日通知などを提供するXServer上のHTTP API。[専用README](cadence-xs/README.md) |
-| dialogflow-functions | 今後統合予定 | [Issue #84](https://github.com/bvlion/home-et-cetera/issues/84)で扱います |
-| BvlionBatch3 | 今後統合予定 | [Issue #85](https://github.com/bvlion/home-et-cetera/issues/85)で扱います |
-| Quick Ask | 今後移行予定 | 別Issueで扱います |
+| cloud-concierge | 今後統合予定 | [Issue #84](https://github.com/bvlion/home-et-cetera/issues/84)で扱います |
+| pi-steward | 今後統合予定 | [Issue #85](https://github.com/bvlion/home-et-cetera/issues/85)で扱います |
+| cloud-glance | 今後移行予定 | [Issue #88](https://github.com/bvlion/home-et-cetera/issues/88)で扱います |
 
-[Issue #69](https://github.com/bvlion/home-et-cetera/issues/69)ではリポジトリ全体の位置づけと文書を整理します。追加予定の3サービスの実コード統合と、各サービスの実行基盤・アーキテクチャ変更は、それぞれのIssueで扱います。
+[Issue #69](https://github.com/bvlion/home-et-cetera/issues/69)ではリポジトリ全体の位置づけと文書を整理します。cloud-concierge（Issue #84）、pi-steward（Issue #85）、cloud-glance（Issue #88）の統合・移行と、各サービスの実行基盤・アーキテクチャ変更は、それぞれのIssueで扱います。
 
 ## 現在の構成
 

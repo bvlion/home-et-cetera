@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-use BvlionBatch5\Database\ConnectionFactory;
-use BvlionBatch5\Dating\DatingNotificationService;
-use BvlionBatch5\Dating\DatingRepository;
-use BvlionBatch5\Mail\HtmlToPdfConverter;
-use BvlionBatch5\Mail\ImapMailbox;
-use BvlionBatch5\Mail\MailProcessingHistoryRepository;
-use BvlionBatch5\Mail\MailProcessingService;
-use BvlionBatch5\Mail\MailRuleRepository;
-use BvlionBatch5\Mail\MimeMessageDecoder;
-use BvlionBatch5\Middleware\BearerTokenMiddleware;
-use BvlionBatch5\Slack\SlackClient;
+use Bvlion\CadenceXs\Database\ConnectionFactory;
+use Bvlion\CadenceXs\Dating\DatingNotificationService;
+use Bvlion\CadenceXs\Dating\DatingRepository;
+use Bvlion\CadenceXs\Mail\HtmlToPdfConverter;
+use Bvlion\CadenceXs\Mail\ImapMailbox;
+use Bvlion\CadenceXs\Mail\MailProcessingHistoryRepository;
+use Bvlion\CadenceXs\Mail\MailProcessingService;
+use Bvlion\CadenceXs\Mail\MailRuleRepository;
+use Bvlion\CadenceXs\Mail\MimeMessageDecoder;
+use Bvlion\CadenceXs\Middleware\BearerTokenMiddleware;
+use Bvlion\CadenceXs\Slack\SlackClient;
 use GuzzleHttp\Client;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

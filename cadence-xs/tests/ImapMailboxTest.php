@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Mail {
+namespace Bvlion\CadenceXs\Mail {
     function imap_open(
         string $mailbox,
         string $username,
@@ -148,9 +148,9 @@ namespace BvlionBatch5\Mail {
     }
 }
 
-namespace BvlionBatch5\Tests {
-    use BvlionBatch5\Mail\ImapMailbox;
-    use BvlionBatch5\Mail\MimeMessageDecoder;
+namespace Bvlion\CadenceXs\Tests {
+    use Bvlion\CadenceXs\Mail\ImapMailbox;
+    use Bvlion\CadenceXs\Mail\MimeMessageDecoder;
     use DateTimeImmutable;
     use PHPUnit\Framework\TestCase;
     use RuntimeException;
@@ -217,8 +217,8 @@ namespace BvlionBatch5\Tests {
                 );
             }
 
-            self::assertFalse(\BvlionBatch5\Mail\imap_errors());
-            self::assertFalse(\BvlionBatch5\Mail\imap_alerts());
+            self::assertFalse(\Bvlion\CadenceXs\Mail\imap_errors());
+            self::assertFalse(\Bvlion\CadenceXs\Mail\imap_alerts());
         }
 
         public function testEmptyDiagnosticsUseOnlyFixedError(): void
@@ -483,8 +483,8 @@ namespace BvlionBatch5\Tests {
                     1,
                     $GLOBALS['bvlion_batch5_imap_expunge_call_count'],
                 );
-                self::assertFalse(\BvlionBatch5\Mail\imap_errors());
-                self::assertFalse(\BvlionBatch5\Mail\imap_alerts());
+                self::assertFalse(\Bvlion\CadenceXs\Mail\imap_errors());
+                self::assertFalse(\Bvlion\CadenceXs\Mail\imap_alerts());
             } finally {
                 $mailbox->disconnect();
             }

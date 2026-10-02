@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use BvlionBatch5\Mail\ImapConnectivityCheckCommand;
+use Bvlion\CadenceXs\Mail\ImapConnectivityCheckCommand;
 use Dotenv\Dotenv;
 
 require_once __DIR__ . '/../vendor/autoload.php';

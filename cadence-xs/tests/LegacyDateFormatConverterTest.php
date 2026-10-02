@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
-use BvlionBatch5\Mail\LegacyDateFormatConverter;
+use Bvlion\CadenceXs\Mail\LegacyDateFormatConverter;
 use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\TestCase;

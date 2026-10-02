@@ -4,7 +4,7 @@
 
 cadence-xsは、XServer上で動作する認証付きHTTP APIを提供するプロジェクトです。
 
-旧サービス名はBvlionBatch5です。PHPの名前空間`BvlionBatch5`は、既存コードの互換性を維持するため継続使用します。
+旧サービス名はBvlionBatch5です。PHPの名前空間は`Bvlion\CadenceXs`です。
 
 リポジトリルートから作業する場合は、最初に`cd cadence-xs`でサービスディレクトリへ移動してください。Git操作と`.github/`の設定はリポジトリ全体を対象とします。
 
@@ -191,7 +191,7 @@ docker compose run --rm --no-deps app php bin/check-imap.php
 メールがHTML本文を持つかどうかで投稿方法を分けます。
 
 - HTML本文を持たないプレーンテキストのみのメールは、従来どおり件名と`text/plain`本文を整形したテキストを`chat.postMessage`で通常投稿します。
-- HTML本文を持つメール(プレーンテキストと両方を持つ場合を含む)は、HTML本文を`BvlionBatch5\Mail\HtmlToPdfConverter`(Dompdf)でPDF化し、件名を紹介文とするファイルとしてSlackへ添付します。プレーンテキスト本文はこのケースでは投稿に使用しません。
+- HTML本文を持つメール(プレーンテキストと両方を持つ場合を含む)は、HTML本文を`Bvlion\CadenceXs\Mail\HtmlToPdfConverter`(Dompdf)でPDF化し、件名を紹介文とするファイルとしてSlackへ添付します。プレーンテキスト本文はこのケースでは投稿に使用しません。
 
 PDF化・PDF投稿の詳細は次のとおりです。
 
@@ -202,7 +202,7 @@ PDF化・PDF投稿の詳細は次のとおりです。
 - Dompdfはブラウザと異なり、指定フォントにグリフがない場合の自動フォールバックを行わないため、メール本文のHTML/CSSがどのような`font-family`を指定していても(`!important`や高い詳細度を伴う場合を含む)、必ずIPAexゴシックが選択されるようにしています。CSSへ上書きルールを注入して詳細度・`!important`で競う方式ではなく、Dompdf自身が解決しうる全フォント名(`sans-serif`・`serif`・`helvetica`・`times`等、`vendor/dompdf/dompdf/lib/fonts/installed-fonts.dist.json`が持つ既定の全ファミリー名)をIPAexゴシックへ登録し直すことで、メール側がどの名前を指定してもDompdfの解決結果がIPAexゴシック以外になり得ないようにしています。それ以外の未知のフォント名は、Dompdfの既定フォールバック(`Options::setDefaultFont()`、これもIPAexゴシックに設定)へ渡ります。
 - HTML本文・生成したPDFはメモリ上でのみ扱い、ディスクへの一時ファイル書き出し、ログへの出力、永続保存を行いません。
 - HTMLメールのPDF変換時には、PHPのエラーログへメールUID、件名、受信日時、HTMLサイズ、各画像のURLまたはContent-ID、名前解決結果、HTTP応答・リダイレクト、MIME判定、取得サイズ、処理結果、例外情報をJSON形式で記録します。これは画像取得失敗を調査するための運用ログであり、ログファイルをリポジトリへ配置・共有しません。
-- HTML本文の取得段階(`BvlionBatch5\Mail\MimeMessageDecoder`)とDompdfへ渡す直前(`BvlionBatch5\Mail\HtmlToPdfConverter::MAX_HTML_BYTES`、5,000,000バイト、約4.8MiB)の両方でサイズを制限します。Dompdfは入力HTMLサイズによって数倍〜十数倍のメモリを使用することがあり、実行環境のPHP `memory_limit`も未確認のため、5,000,000バイトという値はDompdfのレンダリングが安全であることを保証するものではなく、メモリ枯渇や実行時間超過のリスクを抑えるための運用上の上限です。
+- HTML本文の取得段階(`Bvlion\CadenceXs\Mail\MimeMessageDecoder`)とDompdfへ渡す直前(`Bvlion\CadenceXs\Mail\HtmlToPdfConverter::MAX_HTML_BYTES`、5,000,000バイト、約4.8MiB)の両方でサイズを制限します。Dompdfは入力HTMLサイズによって数倍〜十数倍のメモリを使用することがあり、実行環境のPHP `memory_limit`も未確認のため、5,000,000バイトという値はDompdfのレンダリングが安全であることを保証するものではなく、メモリ枯渇や実行時間超過のリスクを抑えるための運用上の上限です。
   - `MimeMessageDecoder`は、HTMLパートを`imap_fetchbody()`で取得する前にIMAPが宣言するパートサイズ(`part->bytes`、RFC 3501でtext系パートに必須の項目)を確認し、超過時は本文取得自体を行わずに失敗させます。取得後も、base64/quoted-printableのデコード前後、UTF-8への文字コード変換後の各段階でバイト数を確認します。転送エンコード状態(base64・quoted-printableでかさ増しされた状態)の上限は、base64の4/3倍やquoted-printableの再現しにくい増加を考慮し、最終的なUTF-8 HTMLの上限(5,000,000バイト)より大きい値(4倍)を用い、デコード後・変換後は最終上限(5,000,000バイト)で確認します。宣言サイズが取得できない場合は、無制限扱いにはせず失敗させます。
   - いずれの段階で上限を超えた場合も、HTMLを途中で切って不完全なPDFを生成することはせず、そのメール1件だけを本文・秘密情報を含まない`RuntimeException`で失敗させ、既読化・移動・完了記録を行わずに後続の対象メール処理を継続します。
 - IPAexゴシックの登録は、`FontMetrics::registerFont()`(呼び出しごとにフォント本体をディスクへ書き出す)を1回だけ行い、上記の全フォント名(14ファミリー×normal/bold/italic/bold-italicの4書体=56通り)は、その1回で生成された同じキャッシュ済みフォント・メトリクスを参照する別名として`FontMetrics::setFontFamily()`(`installed-fonts.json`という小さなJSONの参照情報だけを保存し、フォント本体やメトリクスファイルは複製しない)へ設定します。`registerFont()`をフォント名の数だけ呼ぶと、内容が同一でも呼び出しごとに新しいコピーがディスクへ書き出されるため、この方式でIPAexゴシック本体(約6MB)の重複コピーを防いでいます。
@@ -215,7 +215,7 @@ PDF化・PDF投稿の詳細は次のとおりです。
 
 `channel_id`が`NULL`のルールに一致したメールは、Slack投稿(および表示名・アイコンの生成)を行わずに既読化・フォルダ移動・処理完了記録だけを行います。
 
-Slack投稿時の表示名は、旧BvlionBatch4の`Mail#getSlackUserName()`と同じ規則で生成します。`prefix_format`が空文字列の場合は`user_name`のみ、空でない場合は`user_name`の末尾へメール受信日時を`Asia/Tokyo`で整形した文字列を付加します。`prefix_format`はJava/Apache Commons `FastDateFormat`(`java.text.SimpleDateFormat`相当)のパターンであり、PHPの`DateTimeInterface::format()`とは記号の意味が異なるため、`BvlionBatch5\Mail\LegacyDateFormatConverter`が旧パターンのトークンを直接解釈し、日時文字列を組み立てます(PHPの書式文字列へ変換して`format()`に渡す方式ではありません)。受信日時は`imap_fetch_overview()`が返す`udate`(IMAPサーバーのINTERNALDATE)から取得します。旧`receivedDate`と同じ値であり、メールヘッダーの`Date`(送信日時)とは意味が異なるため使用しません。`prefix_format`が空でないにもかかわらず受信日時を取得できない場合は、旧BvlionBatch4の`MailUtil#getSlackUserName()`と同じく`user_name`のみへフォールバックし、そのままSlack投稿・既読化・フォルダ移動を継続します(メール処理自体は失敗させません)。
+Slack投稿時の表示名は、旧BvlionBatch4の`Mail#getSlackUserName()`と同じ規則で生成します。`prefix_format`が空文字列の場合は`user_name`のみ、空でない場合は`user_name`の末尾へメール受信日時を`Asia/Tokyo`で整形した文字列を付加します。`prefix_format`はJava/Apache Commons `FastDateFormat`(`java.text.SimpleDateFormat`相当)のパターンであり、PHPの`DateTimeInterface::format()`とは記号の意味が異なるため、`Bvlion\CadenceXs\Mail\LegacyDateFormatConverter`が旧パターンのトークンを直接解釈し、日時文字列を組み立てます(PHPの書式文字列へ変換して`format()`に渡す方式ではありません)。受信日時は`imap_fetch_overview()`が返す`udate`(IMAPサーバーのINTERNALDATE)から取得します。旧`receivedDate`と同じ値であり、メールヘッダーの`Date`(送信日時)とは意味が異なるため使用しません。`prefix_format`が空でないにもかかわらず受信日時を取得できない場合は、旧BvlionBatch4の`MailUtil#getSlackUserName()`と同じく`user_name`のみへフォールバックし、そのままSlack投稿・既読化・フォルダ移動を継続します(メール処理自体は失敗させません)。
 
 処理はHTTPリクエスト内で同期実行し、Bearer Tokenには`SCHEDULER_BEARER_TOKEN`を使用します。応答はHTTP 200のJSONで、全メールの処理結果と失敗件数を返します。
 

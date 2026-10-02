@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Slim\App;

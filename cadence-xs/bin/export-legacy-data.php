@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use BvlionBatch5\Database\ConnectionFactory;
-use BvlionBatch5\Migration\LegacyDatabaseEnvironmentLoader;
-use BvlionBatch5\Migration\LegacyJsonFileWriter;
+use Bvlion\CadenceXs\Database\ConnectionFactory;
+use Bvlion\CadenceXs\Migration\LegacyDatabaseEnvironmentLoader;
+use Bvlion\CadenceXs\Migration\LegacyJsonFileWriter;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 

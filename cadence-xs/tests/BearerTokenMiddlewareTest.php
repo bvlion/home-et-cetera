@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
-use BvlionBatch5\Middleware\BearerTokenMiddleware;
+use Bvlion\CadenceXs\Middleware\BearerTokenMiddleware;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Factory\ResponseFactory;

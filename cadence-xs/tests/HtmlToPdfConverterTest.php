@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
-use BvlionBatch5\Mail\HtmlToPdfConverter;
+use Bvlion\CadenceXs\Mail\HtmlToPdfConverter;
 use FontLib\Font;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;

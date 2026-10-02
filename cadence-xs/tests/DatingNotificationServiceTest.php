@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
-use BvlionBatch5\Dating\DatingNotificationService;
-use BvlionBatch5\Dating\DatingRepository;
-use BvlionBatch5\Slack\SlackClient;
+use Bvlion\CadenceXs\Dating\DatingNotificationService;
+use Bvlion\CadenceXs\Dating\DatingRepository;
+use Bvlion\CadenceXs\Slack\SlackClient;
 use DateTimeImmutable;
 use DateTimeZone;
 use GuzzleHttp\Client;

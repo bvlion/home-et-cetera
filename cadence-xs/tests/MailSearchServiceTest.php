@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
-use BvlionBatch5\Mail\ImapMailbox;
-use BvlionBatch5\Mail\MailRuleRepository;
-use BvlionBatch5\Mail\MailSearchService;
+use Bvlion\CadenceXs\Mail\ImapMailbox;
+use Bvlion\CadenceXs\Mail\MailRuleRepository;
+use Bvlion\CadenceXs\Mail\MailSearchService;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 

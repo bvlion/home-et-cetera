@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Mail;
+namespace Bvlion\CadenceXs\Mail;
 
 use DateTimeImmutable;
 use DateTimeZone;

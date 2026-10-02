@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
 use Dotenv\Exception\ValidationException;
 use PHPUnit\Framework\TestCase;

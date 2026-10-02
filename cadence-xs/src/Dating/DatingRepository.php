@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Dating;
+namespace Bvlion\CadenceXs\Dating;
 
-use BvlionBatch5\Database\ConnectionFactory;
+use Bvlion\CadenceXs\Database\ConnectionFactory;
 use PDO;
 
 class DatingRepository

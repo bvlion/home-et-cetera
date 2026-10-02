@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
-use BvlionBatch5\Database\ConnectionFactory;
-use BvlionBatch5\Migration\LegacyDataImporter;
-use BvlionBatch5\Migration\LegacyMailApiDisplayBackfiller;
+use Bvlion\CadenceXs\Database\ConnectionFactory;
+use Bvlion\CadenceXs\Migration\LegacyDataImporter;
+use Bvlion\CadenceXs\Migration\LegacyMailApiDisplayBackfiller;
 use PDO;
 use PHPUnit\Framework\TestCase;
 

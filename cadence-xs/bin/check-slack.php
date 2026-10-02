@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use BvlionBatch5\Slack\SlackConnectivityCheckCommand;
+use Bvlion\CadenceXs\Slack\SlackConnectivityCheckCommand;
 use Dotenv\Dotenv;
 use GuzzleHttp\Client;
 

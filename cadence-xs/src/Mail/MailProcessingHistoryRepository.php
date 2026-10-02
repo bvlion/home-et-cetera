@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Mail;
+namespace Bvlion\CadenceXs\Mail;
 
-use BvlionBatch5\Database\ConnectionFactory;
+use Bvlion\CadenceXs\Database\ConnectionFactory;
 use DateTimeImmutable;
 use PDO;
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
-use BvlionBatch5\Mail\HtmlToPdfConverter;
-use BvlionBatch5\Mail\MimeMessageDecoder;
+use Bvlion\CadenceXs\Mail\HtmlToPdfConverter;
+use Bvlion\CadenceXs\Mail\MimeMessageDecoder;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 

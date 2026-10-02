@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
-use BvlionBatch5\Migration\LegacyDatabaseEnvironmentLoader;
+use Bvlion\CadenceXs\Migration\LegacyDatabaseEnvironmentLoader;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 

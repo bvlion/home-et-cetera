@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Mail;
+namespace Bvlion\CadenceXs\Mail;
 
-use BvlionBatch5\Slack\SlackClient;
+use Bvlion\CadenceXs\Slack\SlackClient;
 use DateTimeImmutable;
 use RuntimeException;
 

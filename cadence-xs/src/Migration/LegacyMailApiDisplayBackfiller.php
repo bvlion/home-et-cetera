@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Migration;
+namespace Bvlion\CadenceXs\Migration;
 
-use BvlionBatch5\Database\ConnectionFactory;
+use Bvlion\CadenceXs\Database\ConnectionFactory;
 use PDO;
 use Throwable;
 

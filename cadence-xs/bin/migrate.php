@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use BvlionBatch5\Database\ConnectionFactory;
+use Bvlion\CadenceXs\Database\ConnectionFactory;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 

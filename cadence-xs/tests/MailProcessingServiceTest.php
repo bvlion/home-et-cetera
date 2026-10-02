@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
-use BvlionBatch5\Mail\HtmlToPdfConverter;
-use BvlionBatch5\Mail\ImapMailbox;
-use BvlionBatch5\Mail\MailProcessingHistoryRepository;
-use BvlionBatch5\Mail\MailProcessingService;
-use BvlionBatch5\Mail\MailRuleRepository;
-use BvlionBatch5\Mail\MimeMessageDecoder;
-use BvlionBatch5\Slack\SlackClient;
+use Bvlion\CadenceXs\Mail\HtmlToPdfConverter;
+use Bvlion\CadenceXs\Mail\ImapMailbox;
+use Bvlion\CadenceXs\Mail\MailProcessingHistoryRepository;
+use Bvlion\CadenceXs\Mail\MailProcessingService;
+use Bvlion\CadenceXs\Mail\MailRuleRepository;
+use Bvlion\CadenceXs\Mail\MimeMessageDecoder;
+use Bvlion\CadenceXs\Slack\SlackClient;
 use DateTimeImmutable;
 use DateTimeZone;
 use GuzzleHttp\Client;

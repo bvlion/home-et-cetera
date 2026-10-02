@@ -23,7 +23,7 @@
     },
     "autoload": {
         "psr-4": {
-            "BvlionBatch5\\": "src/"
+            "Bvlion\\CadenceXs\\": "src/"
         }
     },
     "config": {

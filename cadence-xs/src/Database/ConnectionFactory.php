@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Database;
+namespace Bvlion\CadenceXs\Database;
 
 use PDO;
 use PDOException;

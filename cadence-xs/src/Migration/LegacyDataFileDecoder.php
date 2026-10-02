@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Migration;
+namespace Bvlion\CadenceXs\Migration;
 
 use JsonException;
 use stdClass;

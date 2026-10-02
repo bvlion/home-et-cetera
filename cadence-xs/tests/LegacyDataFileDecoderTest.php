@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Tests;
+namespace Bvlion\CadenceXs\Tests;
 
-use BvlionBatch5\Migration\LegacyDataFileDecoder;
+use Bvlion\CadenceXs\Migration\LegacyDataFileDecoder;
 use PHPUnit\Framework\TestCase;
 
 final class LegacyDataFileDecoderTest extends TestCase

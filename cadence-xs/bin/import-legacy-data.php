@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use BvlionBatch5\Database\ConnectionFactory;
-use BvlionBatch5\Migration\LegacyDataFileDecoder;
-use BvlionBatch5\Migration\LegacyDataImporter;
+use Bvlion\CadenceXs\Database\ConnectionFactory;
+use Bvlion\CadenceXs\Migration\LegacyDataFileDecoder;
+use Bvlion\CadenceXs\Migration\LegacyDataImporter;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 

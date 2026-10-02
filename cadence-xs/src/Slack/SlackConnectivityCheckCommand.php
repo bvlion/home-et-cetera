@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace BvlionBatch5\Slack;
+namespace Bvlion\CadenceXs\Slack;
 
 use GuzzleHttp\ClientInterface;
 use RuntimeException;
