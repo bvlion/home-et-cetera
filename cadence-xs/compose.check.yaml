@@ -1,0 +1,57 @@
+# 検証専用（make check / GitHub Actions）のCompose構成。
+#
+# 開発用の compose.yaml とは常に別のCompose project名で実行する
+# （Makefileの CHECK_PROJECT を参照）。次の点で開発環境から分離している。
+#
+# - host へ port を公開しない
+# - 開発用の `database` volumeを共有せず、検証専用の使い捨てvolumeを使用する
+#   （volumeのキー名自体は compose.yaml と同じだが、project名が異なるため
+#   実体のvolumeは別物になる。`make check` はcleanupのたびにこのvolumeを
+#   削除するため使い捨てである）
+# - app の vendor volumeも開発用と共有しない
+# - 実 .env を読み込まない。Makefileが `.env.example` を `/app/.env` へ
+#   read-only で重ね、Composeの変数展開にも `--env-file .env.example` を
+#   使用するため、サービスディレクトリに実 `.env` が存在していても読み込まない
+#
+# app・database の build・環境変数・healthcheckは、検証結果が開発環境と
+# 不必要に乖離しないよう compose.yaml と揃えている。
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ./.env.example:/app/.env:ro
+      - vendor:/app/vendor
+
+  database:
+    image: mysql:5.7
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+09:00
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-example_database}
+      MYSQL_USER: ${DB_USER:-example_database_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-example_database_password}
+      MYSQL_ROOT_PASSWORD: example_root_password
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          MYSQL_PWD="$${MYSQL_PASSWORD}"
+          mysqladmin ping -h 127.0.0.1 -u"$${MYSQL_USER}" --silent
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - database:/var/lib/mysql
+
+volumes:
+  database:
+  vendor:

@@ -43,9 +43,9 @@ jobs:
 
       # Secrets are passed to the remote shell only via stdin (never as SSH
       # command-line arguments), so they never appear in the remote host's
-      # process list. See bin/deploy-remote.sh for the deploy steps it runs
+      # process list. See cadence-xs/bin/deploy-remote.sh for the deploy steps it runs
       # (checkout of the tagged commit, composer install, migration,
-      # public/.htaccess sync)。手順はdocs/BvlionBatch5/README.mdの
+      # public/.htaccess sync)。手順はcadence-xs/README.mdの
       # 「自動デプロイ(`v*`タグpush)」節を参照。
       - name: Deploy to production
         env:
@@ -65,7 +65,7 @@ jobs:
             printf 'DEPLOY_PUBLIC_PATH=%q\n' "$DEPLOY_PUBLIC_PATH"
             printf 'TAG_NAME=%q\n' "$TAG_NAME"
             printf 'EXPECTED_COMMIT=%q\n' "$EXPECTED_COMMIT"
-            cat bin/deploy-remote.sh
+            cat cadence-xs/bin/deploy-remote.sh
           } | ssh \
               -i "$HOME/.ssh/deploy_key" \
               -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
@@ -77,7 +77,7 @@ jobs:
       - name: Unauthenticated connectivity check
         env:
           DEPLOY_BASE_URL: ${{ secrets.DEPLOY_BASE_URL }}
-        run: bin/check-deploy-connectivity.sh
+        run: cadence-xs/bin/check-deploy-connectivity.sh
 
       - name: Remove SSH key
         if: always()

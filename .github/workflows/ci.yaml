@@ -18,7 +18,8 @@ jobs:
         uses: actions/checkout@v7
 
       # ローカルの検証用Compose(compose.check.yaml)と同じ安全な入口を使用する。
-      # make check は検証専用のCompose project(bvlionbatch5-check)だけを使い、
+      # make check は検証専用のCompose project(cadence-xs-check)だけを使い、
       # 成功・失敗にかかわらず自分自身でそのprojectをcleanupする。
       - name: make check
+        working-directory: cadence-xs
         run: make check

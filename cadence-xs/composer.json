@@ -1,0 +1,96 @@
+{
+    "name": "bvlion/cadence-xs",
+    "description": "HTTP APIs migrated from the previous batch environments",
+    "type": "project",
+    "require": {
+        "ext-curl": "*",
+        "ext-dom": "*",
+        "ext-gd": "*",
+        "ext-imap": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "dompdf/dompdf": "^3.1",
+        "guzzlehttp/guzzle": "^8.0",
+        "php": "^8.5",
+        "slim/psr7": "^1.8",
+        "slim/slim": "^4.15",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.2",
+        "squizlabs/php_codesniffer": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bvlion\\CadenceXs\\": "src/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.5.5"
+        }
+    },
+    "scripts": {
+        "migrate": "@php bin/migrate.php",
+        "lint": [
+            "@php -l bin/check-slack.php",
+            "@php -l bin/check-imap.php",
+            "@php -l bin/convert-html-to-pdf.php",
+            "@php -l bin/migrate.php",
+            "@php -l bin/export-legacy-data.php",
+            "@php -l bin/import-legacy-data.php",
+            "@php -l bin/verify-legacy-migration.php",
+            "@php -l bin/backfill-mail-api-display.php",
+            "@php -l bootstrap/config.php",
+            "@php -l bootstrap/app.php",
+            "@php -l public/index.php",
+            "@php -l src/Database/ConnectionFactory.php",
+            "@php -l src/Dating/DatingNotificationService.php",
+            "@php -l src/Dating/DatingRepository.php",
+            "@php -l src/Mail/HtmlToPdfConverter.php",
+            "@php -l src/Mail/ImapConnectivityCheckCommand.php",
+            "@php -l src/Mail/ImapMailbox.php",
+            "@php -l src/Mail/LegacyDateFormatConverter.php",
+            "@php -l src/Mail/MailProcessingHistoryRepository.php",
+            "@php -l src/Mail/MailProcessingService.php",
+            "@php -l src/Mail/MailRuleRepository.php",
+            "@php -l src/Mail/MailSearchService.php",
+            "@php -l src/Mail/MimeMessageDecoder.php",
+            "@php -l src/Middleware/BearerTokenMiddleware.php",
+            "@php -l src/Migration/LegacyDatabaseEnvironmentLoader.php",
+            "@php -l src/Migration/LegacyDataFileDecoder.php",
+            "@php -l src/Migration/LegacyDataImporter.php",
+            "@php -l src/Migration/LegacyDataVerifier.php",
+            "@php -l src/Migration/LegacyJsonFileWriter.php",
+            "@php -l src/Migration/LegacyMailApiDisplayBackfiller.php",
+            "@php -l src/Slack/SlackConnectivityCheckCommand.php",
+            "@php -l src/Slack/SlackClient.php",
+            "@php -l tests/BearerTokenMiddlewareTest.php",
+            "@php -l tests/ConfigurationTest.php",
+            "@php -l tests/DatabaseConnectionTest.php",
+            "@php -l tests/DatingNotificationRouteTest.php",
+            "@php -l tests/DatingNotificationServiceTest.php",
+            "@php -l tests/HtmlToPdfConverterTest.php",
+            "@php -l tests/ImapConnectivityCheckCommandTest.php",
+            "@php -l tests/ImapMailboxTest.php",
+            "@php -l tests/LegacyDatabaseEnvironmentLoaderTest.php",
+            "@php -l tests/LegacyDataFileDecoderTest.php",
+            "@php -l tests/LegacyDataImporterTest.php",
+            "@php -l tests/LegacyDataVerifierTest.php",
+            "@php -l tests/LegacyDateFormatConverterTest.php",
+            "@php -l tests/LegacyJsonFileWriterTest.php",
+            "@php -l tests/LegacyMailApiDisplayBackfillerTest.php",
+            "@php -l tests/MailProcessingHistoryRepositoryTest.php",
+            "@php -l tests/MailProcessingRouteTest.php",
+            "@php -l tests/MailProcessingServiceTest.php",
+            "@php -l tests/MailSearchServiceTest.php",
+            "@php -l tests/MimeMessageDecoderTest.php",
+            "@php -l tests/NotFoundRouteTest.php",
+            "@php -l tests/SlackConnectivityCheckCommandTest.php",
+            "@php -l tests/SlackClientTest.php"
+        ],
+        "style": "phpcs",
+        "test": "phpunit"
+    }
+}
