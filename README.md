@@ -1,4 +1,4 @@
-# 家庭内サービスのモノレポ
+# home-et-cetera
 
 複数の個人・家庭内向けサービスを、役割ごとに分離して管理するリポジトリです。各サービスの実行基盤・言語・アーキテクチャ・デプロイ方式は個別に管理します。
 
@@ -7,11 +7,11 @@
 | サービス | 管理状況 | 説明・関連Issue |
 | --- | --- | --- |
 | BvlionBatch5 | 管理中。実装・設定はリポジトリルートに配置 | メール処理・記念日通知などを提供するXServer上のHTTP API。[専用README](docs/bvlionbatch5/README.md) |
-| dialogflow-functions | 今後統合予定 | [Issue #84](https://github.com/bvlion/BvlionBatch5/issues/84)で扱います |
-| BvlionBatch3 | 今後統合予定 | [Issue #85](https://github.com/bvlion/BvlionBatch5/issues/85)で扱います |
+| dialogflow-functions | 今後統合予定 | [Issue #84](https://github.com/bvlion/home-et-cetera/issues/84)で扱います |
+| BvlionBatch3 | 今後統合予定 | [Issue #85](https://github.com/bvlion/home-et-cetera/issues/85)で扱います |
 | Quick Ask | 今後移行予定 | 別Issueで扱います |
 
-[Issue #69](https://github.com/bvlion/BvlionBatch5/issues/69)ではリポジトリ全体の位置づけと文書を整理します。追加予定の3サービスの実コード統合と、各サービスの実行基盤・アーキテクチャ変更は、それぞれのIssueで扱います。
+[Issue #69](https://github.com/bvlion/home-et-cetera/issues/69)ではリポジトリ全体の位置づけと文書を整理します。追加予定の3サービスの実コード統合と、各サービスの実行基盤・アーキテクチャ変更は、それぞれのIssueで扱います。
 
 ## 現在の構成
 
@@ -37,9 +37,9 @@ BvlionBatch5の実装・設定は既存の配置を維持しています。開�
 
 ## リポジトリ名
 
-家庭内サービス全体を表す名称へ変更することはIssue #69で決まっています。具体名はユーザーの決定待ちです。現在のリポジトリ名は`BvlionBatch5`のままです。
+リポジトリ名は`home-et-cetera`です。Issue #69で、BvlionBatch5専用だった旧名称から家庭内サービス全体を表す名称へ変更しました。BvlionBatch5のサービス名・実行設定は維持します。
 
-新名称が確定した後にリポジトリ名を変更し、リポジトリURLを参照する文書・設定への影響を確認します。名称変更はIssue #69の未完了事項として扱います。
+既存のcloneでは、`origin`を`https://github.com/bvlion/home-et-cetera.git`へ更新してください。本番checkoutも同じ対象ですが、更新は利用者が既存の配置で行います。アプリの配置先・公開先・GitHub Secretsを名称に合わせて変更する必要はありません。
 
 ## 開発運用
 

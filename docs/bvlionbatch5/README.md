@@ -313,7 +313,7 @@ make db-wipe CONFIRM=yes
     ```shell
     mkdir -p <app-directory>
     cd <app-directory>
-    git clone https://github.com/bvlion/BvlionBatch5.git .
+    git clone https://github.com/bvlion/home-et-cetera.git .
     ```
 
 2. 専用のComposerを、検証済みチェックサムでBvlionBatch5専用の非公開ツールディレクトリへ配置します。共有Composerは使用・更新しません。Composerの公式インストーラー検証手順に沿って、ダウンロード・SHA-384検証・インストール・後始末を1つのスクリプトで実行します。処理全体をサブシェル`( ... )`で囲んでいるため、途中で失敗しても現在のSSH接続(親シェル)は終了しません。ツールディレクトリの絶対パスは、貼り付け後の対話プロンプトで入力します(コマンド内に埋め込みません)。
@@ -375,7 +375,7 @@ make db-wipe CONFIRM=yes
 
     `--optimize-autoloader --classmap-authoritative`は、デプロイのたびに`composer install`を実行する運用と整合するため採用します。コードの変更後に依存関係を更新し忘れると、追加したクラスが読み込めなくなる点に注意してください。
 
-4. `.env`を配置します。値は`.env.example`をコピーし、README「環境設定」節の一覧に従って本番値を設定します。実際の値はコミットしません。
+4. `.env`を配置します。値は`.env.example`をコピーし、この文書の「環境設定」節の一覧に従って本番値を設定します。実際の値はコミットしません。
 
     ```shell
     cp .env.example .env

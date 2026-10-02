@@ -42,7 +42,7 @@ check-clean:
 # 開発用DB volumeを1件だけ特定し、そのvolumeだけを明示的に削除する。
 # 該当が0件または複数件の場合は、削除を行わずエラーで停止する。
 # appコンテナや検証用Composeプロジェクトには一切触れない。
-# 削除後にDBを再作成する場合は、README「データベースとマイグレーション」節の
+# 削除後にDBを再作成する場合は、docs/bvlionbatch5/README.md「データベースとマイグレーション」節の
 # 手順を実行すること（本ターゲットはDBの再作成・再マイグレーションを行わない）。
 db-wipe:
 	@if [ "$(CONFIRM)" != "yes" ]; then \
@@ -76,4 +76,4 @@ db-wipe:
 		echo "[中止] volume $$volume の削除を確認できませんでした。DBは初期化されていません。" >&2; \
 		exit 1; \
 	fi; \
-	echo "開発用DBのvolume($$volume)を削除しました。再作成するにはREADME「データベースとマイグレーション」節の手順を実行してください。"
+	echo "開発用DBのvolume($$volume)を削除しました。再作成するにはdocs/bvlionbatch5/README.md「データベースとマイグレーション」節の手順を実行してください。"
