@@ -6,7 +6,7 @@
 
 | サービス | 管理状況 | 説明・関連Issue |
 | --- | --- | --- |
-| BvlionBatch5 | 管理中。実装・設定はリポジトリルートに配置 | メール処理・記念日通知などを提供するXServer上のHTTP API。[専用README](docs/bvlionbatch5/README.md) |
+| BvlionBatch5 | 管理中。実装・設定はリポジトリルートに配置 | メール処理・記念日通知などを提供するXServer上のHTTP API。[専用README](docs/BvlionBatch5/README.md) |
 | dialogflow-functions | 今後統合予定 | [Issue #84](https://github.com/bvlion/home-et-cetera/issues/84)で扱います |
 | BvlionBatch3 | 今後統合予定 | [Issue #85](https://github.com/bvlion/home-et-cetera/issues/85)で扱います |
 | Quick Ask | 今後移行予定 | 別Issueで扱います |
@@ -18,7 +18,7 @@
 | 配置 | 役割 |
 | --- | --- |
 | `README.md`、`AGENTS.md` | リポジトリ全体の説明・共通作業ルール |
-| `docs/bvlionbatch5/` | BvlionBatch5専用の説明・作業ルール |
+| `docs/BvlionBatch5/` | BvlionBatch5専用の説明・作業ルール |
 | `bin/`、`bootstrap/`、`database/`、`public/`、`resources/`、`src/`、`tests/` | BvlionBatch5の実装・データベース定義・検証 |
 | `composer.*`、`phpcs.xml`、`phpunit.xml` | BvlionBatch5の依存関係・検証設定 |
 | `docker/`、`compose*.yaml`、`Makefile`、`.dockerignore`、`.env.example` | BvlionBatch5のローカル開発・検証設定 |
@@ -26,7 +26,7 @@
 | `.github/dependabot.yml` | BvlionBatch5のComposer依存関係とGitHub Actionsの更新設定 |
 | `docs/production-environment.md`、`docs/legacy-data-migration.md`、`docs/legacy-db.env.example` | BvlionBatch5の本番環境・旧環境データ移行資料 |
 
-BvlionBatch5の実装・設定は既存の配置を維持しています。開発・検証・デプロイ手順は[専用README](docs/bvlionbatch5/README.md)を参照してください。ルートの`make check`と`v*`タグによる本番デプロイはBvlionBatch5用です。
+BvlionBatch5の実装・設定は既存の配置を維持しています。開発・検証・デプロイ手順は[専用README](docs/BvlionBatch5/README.md)を参照してください。ルートの`make check`と`v*`タグによる本番デプロイはBvlionBatch5用です。
 
 ## サービスを追加する方針
 
@@ -43,7 +43,7 @@ BvlionBatch5の実装・設定は既存の配置を維持しています。開�
 
 ## 開発運用
 
-共通ルールは[AGENTS.md](AGENTS.md)、BvlionBatch5固有のルールは[専用AGENTS.md](docs/bvlionbatch5/AGENTS.md)を参照してください。
+共通ルールは[AGENTS.md](AGENTS.md)、BvlionBatch5固有のルールは[専用AGENTS.md](docs/BvlionBatch5/AGENTS.md)を参照してください。
 
 - 1つのIssueにつき、1つのブランチと1つのPRを作成します。
 - PRはユーザーの明示的な承認を得るまでマージしません。

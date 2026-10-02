@@ -11,14 +11,14 @@
 
 ## BvlionBatch5のルールの適用範囲
 
-BvlionBatch5に関する作業では、必ず[専用AGENTS.md](docs/bvlionbatch5/AGENTS.md)を読み、共通ルールと併せて適用してください。既存の実行・デプロイを維持するため、BvlionBatch5の実装・設定は引き続きルートにあります。
+BvlionBatch5に関する作業では、必ず[専用AGENTS.md](docs/BvlionBatch5/AGENTS.md)を読み、共通ルールと併せて適用してください。既存の実行・デプロイを維持するため、BvlionBatch5の実装・設定は引き続きルートにあります。
 
 専用ルールは次のBvlionBatch5の対象に適用します。
 
 - `bin/`、`bootstrap/`、`database/`、`docker/`、`public/`、`resources/`、`src/`、`tests/`
 - `composer.json`、`composer.lock`、`phpcs.xml`、`phpunit.xml`、`Makefile`、`compose.yaml`、`compose.check.yaml`、`.dockerignore`、`.env.example`
 - `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml`、`.github/dependabot.yml`のComposer設定
-- `docs/bvlionbatch5/`、`docs/production-environment.md`、`docs/legacy-data-migration.md`、`docs/legacy-db.env.example`
+- `docs/BvlionBatch5/`、`docs/production-environment.md`、`docs/legacy-data-migration.md`、`docs/legacy-db.env.example`
 
 追加サービスのディレクトリや、そのサービス専用の設定・検証・デプロイにはBvlionBatch5専用ルールを適用しません。サービスごとのAGENTS.mdを参照してください。
 
