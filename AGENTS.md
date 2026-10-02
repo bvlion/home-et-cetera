@@ -1,23 +1,26 @@
 # AGENTS.md
 
-このファイルはリポジトリ全体に適用します。
+このファイルの共通ルールはリポジトリ全体に適用します。
 
-## 移行範囲
+## リポジトリの目的とサービスの分離
 
-- 移行対象は、旧BvlionBatch4のメール処理と記念日通知、および旧HomeServerの残業通知です。
-- 旧BvlionBatch4の `/horoscope` と `/speak-time` は移行対象外です。
-- Issueで明示されていない機能を移行対象へ追加しません。
+- このリポジトリは、複数の個人・家庭内向けサービスを管理するモノレポです。
+- 各サービスの実行基盤・言語・アーキテクチャ・デプロイ方式はサービスごとに管理します。BvlionBatch5の技術・運用方針を他サービスへ適用しません。
+- サービスの追加・統合は、それぞれのIssueで明示された範囲で行います。
+- 追加サービスはサービスごとのディレクトリへ配置し、そのREADME.mdとAGENTS.mdに役割・実行環境・作業ルールを記載します。具体的な構成は対象Issueで決めます。
 
-## 技術方針
+## BvlionBatch5のルールの適用範囲
 
-- WebアプリケーションフレームワークにはSlim 4を使用します。
-- データベースアクセスにはPDOを使用します。
-- APIはHTTPリクエスト内で処理を完了する同期処理とします。
-- `/health`エンドポイントは実装しません。
-- 不要な抽象化を導入しません。
-- DIコンテナを導入しません。
-- 基底Repositoryを導入しません。
-- 過剰なClean Architectureを導入しません。
+BvlionBatch5に関する作業では、必ず[専用AGENTS.md](docs/BvlionBatch5/AGENTS.md)を読み、共通ルールと併せて適用してください。既存の実行・デプロイを維持するため、BvlionBatch5の実装・設定は引き続きルートにあります。
+
+専用ルールは次のBvlionBatch5の対象に適用します。
+
+- `bin/`、`bootstrap/`、`database/`、`docker/`、`public/`、`resources/`、`src/`、`tests/`
+- `composer.json`、`composer.lock`、`phpcs.xml`、`phpunit.xml`、`Makefile`、`compose.yaml`、`compose.check.yaml`、`.dockerignore`、`.env.example`
+- `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml`、`.github/dependabot.yml`のComposer設定
+- `docs/BvlionBatch5/`、`docs/production-environment.md`、`docs/legacy-data-migration.md`、`docs/legacy-db.env.example`
+
+追加サービスのディレクトリや、そのサービス専用の設定・検証・デプロイにはBvlionBatch5専用ルールを適用しません。サービスごとのAGENTS.mdを参照してください。
 
 ## 判断と実装
 
@@ -37,15 +40,6 @@
 - PRは原則としてCreate a merge commitで取り込みます。
 - ユーザーの明示的な承認を得るまでPRをマージしません。
 - PRは、作業途中で共有する必要がある場合を除き、Draftにしません。
-
-## Docker運用の安全ルール
-
-- 起動中の既存ローカル開発Docker環境（container・network・volume）を、利用者の明示的な許可なしに再作成・削除しません。
-- 開発用の`database` volumeを、利用者の明示的な許可なしに削除しません。削除するコマンドは`make db-wipe CONFIRM=yes`だけです。
-- 実`.env`、実データベース、Slack・IMAPなど実外部サービスへ、利用者の明示的な許可なしに接続しません。
-- 上記について判断できない場合は、実行せず作業を止めて確認します。
-- 事故・中断・確認事項は日本語で具体的に報告します。
-- 通常の検証には検証専用の`make check`を使用します。`make check`は検証専用のCompose project（`bvlionbatch5-check`）だけを使い、開発用のcontainer・network・volume・host portには一切触れません。
 
 ## Public運用
 
