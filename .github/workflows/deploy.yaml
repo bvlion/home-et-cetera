@@ -1,4 +1,4 @@
-name: Production Deploy
+name: cadence-xs Production Deploy
 
 on:
   push:

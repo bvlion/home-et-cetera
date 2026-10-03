@@ -1,4 +1,4 @@
-name: CI
+name: cadence-xs CI
 
 on:
   push:
