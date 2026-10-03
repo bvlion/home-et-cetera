@@ -4,7 +4,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'cadence-xs/**'
+      - '.github/workflows/ci.yaml'
   pull_request:
+    paths:
+      - 'cadence-xs/**'
+      - '.github/workflows/ci.yaml'
 
 permissions:
   contents: read
