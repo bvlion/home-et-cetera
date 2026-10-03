@@ -51,6 +51,8 @@
 
 `cadence-xs CI`はcadence-xs専用のworkflowです。mainへのpushとすべてのPull Requestで`test`ジョブを起動し、`cadence-xs/`または`.github/workflows/cadence-xs-ci.yaml`に変更がある場合だけ既存の`make check`を実行します。ルートREADMEのみ・他サービスのみの変更では重い検証をスキップし、変更判定が成功すれば`test`も成功します。変更判定や検証の失敗はジョブの失敗となります。main rulesetの`Protect main`に設定済みのGitHub Actionsの必須チェック`test`と一致するため、管理設定の変更は不要です。他サービスのCIと必要な必須チェックは、そのサービスを統合するIssueで追加します。
 
+`cloud-glance CI`もmainへのpushとすべてのPull Requestで `cloud-glance-test` を起動します。cloud-glanceまたは専用workflowの変更時だけ検証し、関係しない変更では重い検証をスキップしてチェックを成功させます。Issue #88に従い、workflowのmainへのマージ後に `Protect main` の必須チェックへ `cloud-glance-test` を追加します。設定手順は[専用README](cloud-glance/README.md)を参照してください。
+
 ## Publicリポジトリの運用
 
 - 本番値、個人情報、秘密情報をコミットしません。

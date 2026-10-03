@@ -13,5 +13,6 @@
 - Responses APIの `gpt-6-luna`、`reasoning.effort: low`、`store: false`、自動Web検索、`Asia/Tokyo` を維持します。継続会話を追加しません。
 - Slackへは共有操作があった場合だけ投稿し、回答取得時点の質問と組み合わせます。移行元のMarkdown・出典・クリア・処理中の操作制限を維持します。
 - 確認はこのディレクトリで `npm ci`、`npm --prefix functions ci`、`npm run check`、`npm run test:emulators` を実行します。エミュレーター検証は `demo-cloud-glance` と架空値だけを使用します。
+- CIの `cloud-glance-test` はmainへのpushとすべてのPull Requestで起動し、関係する変更だけで重い検証を実行します。mainへのマージ後に同名のGitHub Actionsチェックをmain rulesetへ追加し、既存の `test` を維持します。
 - リリースは `cloud-glance-v*` タグpushで行います。cadence-xsのworkflowやデプロイ方式を変更しません。
 - 利用者のアカウント側で必要な作業・未確定の設計判断をIssueまたはPRへ報告します。本番検証前に完了・移行元廃止可能と断定しません。

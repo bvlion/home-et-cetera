@@ -10,8 +10,8 @@ await writeFile('functions/.secret.local', [
   'SLACK_POST_SETTINGS={}'
 ].join('\n') + '\n', { flag: 'wx', mode: 0o600 });
 try {
-  const child = spawn(process.execPath, [
-    'node_modules/firebase-tools/lib/bin/firebase.js', 'emulators:exec',
+  const child = spawn('firebase', [
+    'emulators:exec',
     '--project', 'demo-cloud-glance', '--only', 'hosting,functions,auth',
     'node --test tests/emulator.test.js'
   ], { stdio: 'inherit' });

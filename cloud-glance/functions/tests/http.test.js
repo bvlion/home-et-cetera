@@ -194,6 +194,39 @@ for (const kind of ['network', 'http', 'settings', 'webhook']) {
   });
 }
 
+for (const settings of ['null', '[]', '"fictional-private-detail"', '42', 'true',
+  '{"unexpected":"fictional-private-detail"}', '{"username":42}']) {
+  test(`Slack JSON Secretの不正な形式・許可外キー・非文字列を拒否する: ${settings}`, async () => {
+    request.path = '/api/share'; request.body.answer = '架空の回答';
+    process.env.SLACK_POST_SETTINGS = settings;
+    await cloudGlance(request, response);
+    assert.equal(response.statusCode, 502);
+    assert.equal(global.fetch.mock.callCount(), 0);
+    assert.ok(!JSON.stringify(response.body).includes('fictional-private-detail'));
+  });
+}
+
+test('空のSlack JSON設定はWebhook側の設定で共有できる', async () => {
+  request.path = '/api/share'; request.body.answer = '架空の回答';
+  process.env.SLACK_POST_SETTINGS = '{}';
+  global.fetch.mock.mockImplementation(async () => ({ ok: true }));
+  await cloudGlance(request, response);
+  assert.equal(response.statusCode, 200);
+  const body = JSON.parse(global.fetch.mock.calls[0].arguments[1].body);
+  assert.equal(body.channel, undefined);
+  assert.equal(body.username, undefined);
+  assert.equal(body.icon_url, undefined);
+});
+
+test('Slack JSON Secretの未設定も詳細を公開せず拒否する', async () => {
+  request.path = '/api/share'; request.body.answer = '架空の回答';
+  delete process.env.SLACK_POST_SETTINGS;
+  await cloudGlance(request, response);
+  assert.equal(response.statusCode, 502);
+  assert.equal(global.fetch.mock.callCount(), 0);
+  assert.ok(!JSON.stringify(response.body).includes('SLACK_POST_SETTINGS'));
+});
+
 test('不明なパス・HTTPメソッド・形式・過大な要求を拒否する', async () => {
   request.path = '/api/unknown';
   await cloudGlance(request, response); assert.equal(response.statusCode, 404);

@@ -1,9 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
-
-const { parseFunctionSelector } = createRequire(import.meta.url)('firebase-tools/lib/deploy/functions/functionsDeployHelper');
 
 test('Hostingは外部CSS・JavaScriptを配信し、同じ1関数へAPIを転送する', async () => {
   const html = await readFile('frontend/index.html', 'utf8');
@@ -24,7 +21,9 @@ test('デプロイは専用タグでHostingと1つの関数だけを対象にす
   assert.match(workflow, /--project b-glance --only hosting,functions:cloud-glance:cloudGlance --non-interactive/);
   assert.match(workflow, /group: cloud-glance-production-deploy/);
   const config = JSON.parse(await readFile('firebase.json', 'utf8'));
-  assert.deepEqual(parseFunctionSelector('cloud-glance:cloudGlance', config.functions), [
-    { codebase: 'cloud-glance', idChunks: ['cloudGlance'] }
+  const deploymentTargets = workflow.match(/--only (\S+) --non-interactive/)[1].split(',');
+  assert.deepEqual(deploymentTargets, [
+    'hosting',
+    'functions:' + config.functions[0].codebase + ':' + config.hosting.rewrites[0].function.functionId
   ]);
 });

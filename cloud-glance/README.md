@@ -46,7 +46,7 @@ Hostingには60秒の要求上限があるため、関数は60秒、外部API通
 | `OPENAI_API_KEY` | OpenAI APIキー |
 | `INCOMING_WEBHOOK_URL` | SlackのHTTPS Incoming Webhook URL |
 | `HOME_LOCATION` | 検索に渡すおおまかな地域名。指定しない場合も空のSecretを設定 |
-| `SLACK_POST_SETTINGS` | 移行元の投稿設定を引き継ぐJSONオブジェクト。キーは `channel`、`username`、`icon_url` のみ、各値は文字列。Webhook側の設定だけでよければ `{}` |
+| `SLACK_POST_SETTINGS` | Firebase標準の `defineJsonSecret` で取得する、移行元の投稿設定を引き継ぐJSONオブジェクト。キーは `channel`、`username`、`icon_url` のみ、各値は文字列。Webhook側の設定だけでよければ `{}` |
 
 移行元のSlack投稿先・表示名・アイコンは本番値なので転記していません。必要な既存値を `SLACK_POST_SETTINGS` へ設定してください。[Slack App型のWebhook](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)では投稿先・名前・アイコンの上書きが反映されないため、Slack側でも既存の設定を確認します。
 
@@ -86,7 +86,9 @@ npm run test:emulators
 
 手動のエミュレーター起動には、同名のSecretをすべて架空値で `functions/.secret.local` に設定し、`npm run build`、`npm run emulators` を実行します。Authenticationエミュレーターを使用する接続は、localhost / 127.0.0.1かつ `demo-cloud-glance` の場合だけです。質問・共有の手動操作は実際の外部通信になり得るため、テスト用設定のみ使用してください。
 
-CIは `.github/workflows/cloud-glance-ci.yaml` の `cloud-glance-test` で実行します。cloud-glanceと専用workflowの変更を対象とし、cadence-xsの既存CIとは別です。
+CIは `.github/workflows/cloud-glance-ci.yaml` の `cloud-glance-test` で実行します。mainへのpushとすべてのPull Requestでジョブを起動し、cloud-glanceまたは専用CI / デプロイworkflowの変更がある場合だけ依存関係の復元・検証・ビルド・エミュレーター検証を実行します。関係しない変更では重い検証をスキップし、変更判定が成功すればチェックも成功します。変更判定・検証が失敗した場合はジョブが失敗します。
+
+このworkflowがmainへマージされた後、main rulesetの `Protect main` のRequired status checksへGitHub Actionsの `cloud-glance-test` を追加し、既存の `test` も維持します。マージ前は他のPRに新workflowが存在せずPendingになるため、必須チェックの追加はマージ後に行います。設定後、両チェックが必須になっていることを確認してください。
 
 ## 本番受け入れ検証と移行元の廃止判断
 

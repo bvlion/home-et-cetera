@@ -1,14 +1,14 @@
 const { initializeApp } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const { onRequest } = require('firebase-functions/v2/https');
-const { defineSecret } = require('firebase-functions/params');
+const { defineSecret, defineJsonSecret } = require('firebase-functions/params');
 
 initializeApp();
 const allowedGoogleAccounts = defineSecret('HOME_GOOGLE_ACCOUNT');
 const openaiApiKey = defineSecret('OPENAI_API_KEY');
 const incomingWebhookUrl = defineSecret('INCOMING_WEBHOOK_URL');
 const homeLocation = defineSecret('HOME_LOCATION');
-const slackPostSettings = defineSecret('SLACK_POST_SETTINGS');
+const slackPostSettings = defineJsonSecret('SLACK_POST_SETTINGS');
 
 // Hosting経由と関数URLへの直接アクセスの両方で、同じ認証・allowlist検証を行う。
 exports.cloudGlance = onRequest({
@@ -182,7 +182,7 @@ async function shareToSlack(question, answer, citations) {
     });
   }
 
-  const postSettings = JSON.parse(slackPostSettings.value());
+  const postSettings = slackPostSettings.value();
   if (!postSettings || typeof postSettings !== 'object' || Array.isArray(postSettings) ||
       Object.keys(postSettings).some(key => !['channel', 'username', 'icon_url'].includes(key) || typeof postSettings[key] !== 'string')) {
     throw new Error('Slack共有の設定を確認してください。', { cause: { isPublic: true } });
