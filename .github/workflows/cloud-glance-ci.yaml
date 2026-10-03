@@ -1,0 +1,37 @@
+name: cloud-glance CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cloud-glance/**'
+      - '.github/workflows/cloud-glance-ci.yaml'
+      - '.github/workflows/cloud-glance-deploy.yaml'
+  pull_request:
+    paths:
+      - 'cloud-glance/**'
+      - '.github/workflows/cloud-glance-ci.yaml'
+      - '.github/workflows/cloud-glance-deploy.yaml'
+
+permissions:
+  contents: read
+
+jobs:
+  cloud-glance-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloud-glance
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            cloud-glance/package-lock.json
+            cloud-glance/functions/package-lock.json
+      - run: npm ci
+      - run: npm --prefix functions ci
+      - run: npm run check
+      - run: npm run test:emulators

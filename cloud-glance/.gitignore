@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.firebase/
+*-debug.log*
+functions/.secret.local
+functions/.env*
+gha-creds-*.json
