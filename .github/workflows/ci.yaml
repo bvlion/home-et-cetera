@@ -1,4 +1,4 @@
-name: CI
+name: cadence-xs CI
 
 on:
   push:
@@ -8,22 +8,17 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
-  changes:
+  test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      should-verify-cadence-xs: ${{ steps.filter.outputs.should-verify-cadence-xs }}
 
     steps:
       - name: Checkout
-        if: github.event_name == 'push'
         uses: actions/checkout@v7
 
-      - name: Detect service changes
+      - name: Detect cadence-xs changes
         id: filter
         uses: dorny/paths-filter@v4
         with:
@@ -31,25 +26,11 @@ jobs:
             should-verify-cadence-xs:
               - 'cadence-xs/**'
               - '.github/workflows/ci.yaml'
-              - '.github/workflows/cadence-xs-ci.yaml'
 
-  cadence-xs:
-    needs: changes
-    if: needs.changes.outputs.should-verify-cadence-xs == 'true'
-    uses: ./.github/workflows/cadence-xs-ci.yaml
-
-  # main rulesetの必須チェック名testを、共通CIの集約結果として維持する。
-  test:
-    needs: [changes, cadence-xs]
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check CI results
-        env:
-          CHANGE_DETECTION_RESULT: ${{ needs.changes.result }}
-          JOB_RESULTS: ${{ toJSON(needs.*.result) }}
-        run: |
-          if [[ "$CHANGE_DETECTION_RESULT" != success || "$JOB_RESULTS" == *'"failure"'* || "$JOB_RESULTS" == *'"cancelled"'* ]]; then
-            echo '変更判定またはサービスの検証に失敗しました。' >&2
-            exit 1
-          fi
+      # ローカルの検証用Compose(compose.check.yaml)と同じ安全な入口を使用する。
+      # make check は検証専用のCompose project(cadence-xs-check)だけを使い、
+      # 成功・失敗にかかわらず自分自身でそのprojectをcleanupする。
+      - name: make check
+        if: steps.filter.outputs.should-verify-cadence-xs == 'true'
+        working-directory: cadence-xs
+        run: make check

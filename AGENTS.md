@@ -15,17 +15,10 @@ cadence-xsに関する作業では、必ず[専用AGENTS.md](cadence-xs/AGENTS.m
 
 専用ルールは`cadence-xs/`配下の実装・設定・検証・関連文書と、次のリポジトリ共通配置にあるcadence-xs用の設定に適用します。
 
-- `.github/workflows/cadence-xs-ci.yaml`、`.github/workflows/deploy.yaml`
+- `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml`
 - `.github/dependabot.yml`のComposer設定
 
 他サービスのディレクトリや、そのサービス専用の設定・検証・デプロイにはcadence-xs専用ルールを適用しません。サービスごとのAGENTS.mdを参照してください。
-
-## 共通CIとサービスの検証
-
-- `.github/workflows/ci.yaml`は共通CIの入口です。mainへのpushとすべてのPull Requestで変更対象を判定し、必要なサービスの再利用可能workflowを呼び出します。
-- サービス固有の検証処理は専用workflowに配置します。共通CIにはサービスの実行環境や検証コマンドを直接追加しません。
-- サービスを追加するIssueでは、専用workflow、変更判定、呼び出しジョブ、集約ジョブの`needs`を追加します。未追加サービスの検証は先行実装しません。
-- main rulesetの必須チェック`test`は共通CIの集約結果です。変更判定または必要なサービスの検証が失敗・キャンセルされた場合は失敗とし、無関係なサービスの検証はスキップできます。サービス固有のチェックを必須に変更しません。
 
 ## 判断と実装
 
