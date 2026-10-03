@@ -276,7 +276,7 @@ make check
 - `make check`は`compose.check.yaml`を検証専用のCompose project（`cadence-xs-check`）で実行します。開発用`compose.yaml`が使うcontainer・network・volume・host port（8080番）とは別のprojectであり、開発用の`database` volumeを共有しません。検証用DBは検証専用の使い捨てvolumeを使用します。
 - 検証用のappコンテナは実`.env`を読み込みません。`.env.example`の架空値だけを`/app/.env`へread-onlyで重ね、Composeの変数展開にも`--env-file .env.example`を使用します。
 - 成功・失敗にかかわらず、`make check`終了時に検証専用project（`cadence-xs-check`）のcontainer・network・volumeだけをcleanupします。開発中の`compose.yaml`側のcontainer・DBには一切影響しません。
-- GitHub Actions（リポジトリルートの`.github/workflows/ci.yaml`）も`cadence-xs/`で同じ`make check`を使用します。リポジトリルートからは`make -C cadence-xs check`を実行します。
+- GitHub Actionsでは共通CI（リポジトリルートの`.github/workflows/ci.yaml`）が変更を判定し、`cadence-xs/`または共通・cadence-xsのCI定義に変更がある場合に、`.github/workflows/cadence-xs-ci.yaml`（`cadence-xs CI`）を呼び出します。専用workflowも`cadence-xs/`で同じ`make check`を使用します。無関係な変更では専用の検証をスキップし、共通CIが結果を集約します。リポジトリルートからは`make -C cadence-xs check`を実行します。
 
 `make check`が異常終了してcleanupが行われなかった場合は、検証専用projectだけを対象に手動でcleanupできます。
 

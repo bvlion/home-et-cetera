@@ -21,7 +21,8 @@
 | `cadence-xs/README.md`、`cadence-xs/AGENTS.md` | cadence-xs専用の説明・作業ルール |
 | `cadence-xs/` | cadence-xsの実装・依存関係・データベース定義・ローカル開発・検証設定 |
 | `cadence-xs/docs/` | cadence-xsの本番環境・旧環境データ移行資料 |
-| `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml` | cadence-xsの検証・本番デプロイ |
+| `.github/workflows/ci.yaml` | リポジトリ共通CIの入口・変更判定・検証結果の集約 |
+| `.github/workflows/cadence-xs-ci.yaml`、`.github/workflows/deploy.yaml` | cadence-xsの検証・本番デプロイ |
 | `.github/dependabot.yml` | cadence-xsのComposer依存関係とGitHub Actionsの更新設定 |
 
 開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`cadence-xs-v*`タグによる本番デプロイでは、対象タグの`cadence-xs/`だけを更新します。
@@ -46,6 +47,10 @@
 - 1つのIssueにつき、1つのブランチと1つのPRを作成します。
 - PRはユーザーの明示的な承認を得るまでマージしません。
 - Issueに記載された範囲を最小差分で実装し、明示されていない横展開は行いません。
+
+共通CI（`CI`）はmainへのpushとすべてのPull Requestで起動し、変更対象に応じてサービス専用の再利用可能workflowを呼び出します。`cadence-xs/`、共通CI定義、cadence-xsのCI定義に変更がある場合は`cadence-xs CI`で既存の`make check`を実行します。ルートREADMEのみ・他サービスのみの変更では、cadence-xsの重い検証をスキップします。
+
+共通CIの`test`ジョブは変更判定とサービスの検証結果を集約し、失敗・キャンセルがあれば失敗します。main rulesetの`Protect main`では、既存のGitHub Actionsの必須チェック`test`をそのまま共通CIの結果として使用できるため、管理設定の変更は不要です。サービス固有の`cadence-xs / test`を必須チェックに指定しないでください。新しいサービスを追加するIssueでは、専用workflowと、その変更判定・呼び出しジョブ・集約ジョブの`needs`を追加します。
 
 ## Publicリポジトリの運用
 
