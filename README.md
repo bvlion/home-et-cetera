@@ -24,7 +24,7 @@
 | `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml` | cadence-xsの検証・本番デプロイ |
 | `.github/dependabot.yml` | cadence-xsのComposer依存関係とGitHub Actionsの更新設定 |
 
-開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`v*`タグによる本番デプロイはcadence-xs用です。
+開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`cadence-xs-v*`タグによる本番デプロイでは、対象タグの`cadence-xs/`だけを更新します。
 
 ## サービスを追加する方針
 
@@ -35,7 +35,7 @@
 
 ## リポジトリ名
 
-リポジトリ名は`home-et-cetera`です。Issue #69で、BvlionBatch5専用だった旧名称から家庭内サービス全体を表す名称へ変更しました。Issue #87でBvlionBatch5のサービス名を`cadence-xs`へ変更し、実装・設定を同名ディレクトリへ移しました。XServerの実行基盤と`v*`タグによるデプロイ方式は維持します。
+リポジトリ名は`home-et-cetera`です。Issue #69で、BvlionBatch5専用だった旧名称から家庭内サービス全体を表す名称へ変更しました。Issue #87でBvlionBatch5のサービス名を`cadence-xs`へ変更し、実装・設定を同名ディレクトリへ移しました。XServerの実行基盤は維持します。Issue #92で、デプロイ対象を`cadence-xs/`に限定し、リリースタグを`cadence-xs-v*`へ変更しました。
 
 旧リポジトリ名を使用しているcloneでは、`origin`を`https://github.com/bvlion/home-et-cetera.git`へ更新してください。本番checkoutも同じ対象ですが、更新は利用者が既存の配置で行います。checkout先・公開先・GitHub Secretsは維持します。Issue #87の配置変更では、`.env`の配置、公開用`index.php`のリンク先、既存ローカルDBの引き継ぎが影響を受けます。[専用README](cadence-xs/README.md)の切り替え手順を参照してください。
 

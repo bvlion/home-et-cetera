@@ -7,7 +7,7 @@
 - 現在の役割はメール処理と記念日通知の認証付きHTTP APIです。機能・開発・検証・デプロイの詳細は[README](README.md)を参照してください。
 - 本番はXServerのPHP 8.5.5（CGI/FastCGI）とMySQL 5.7系を使用し、Docker化しません。CLIでは`/opt/php-8.5.5/bin/php`と既存の専用Composerを明示します。
 - 開発・検証のコマンドは`cadence-xs/`で実行します。ローカル開発はDocker Compose、通常の検証は`make check`（ルートからは`make -C cadence-xs check`）を使用します。開発用project名は`cadence-xs`です。
-- デプロイは既存の`v*`タグpushによるGitHub Actions・SSH方式を維持します。`DEPLOY_PATH`はcheckoutのルート、新配置のサービス本体はその配下の`cadence-xs/`です。既存環境の初回切り替えはREADMEの利用者側手順に従います。
+- デプロイは`cadence-xs-v*`タグpushによるGitHub Actions・SSH方式です。`DEPLOY_PATH`は既存Gitリポジトリのルートを維持し、対象タグから配下の`cadence-xs/`だけを更新します。他のパスのファイルは更新・復元・削除しません。変更確認は`cadence-xs/`内のtrackedファイルに限定し、デプロイ済みcommitをHEADとindexへ記録します。不要なルートファイル・旧配置の残存物の初回削除と、旧環境からの切り替えはREADMEの利用者側手順に従います。
 - PHPの名前空間は`Bvlion\CadenceXs`を使用し、過去のマイグレーションは維持します。配置変更を理由に機能やデータを変更しません。
 - 秘密情報・本番値は共通ルールに従い非公開で管理し、`.env`はサービスディレクトリに配置します。旧開発volumeや本番環境の切り替えを無断で実行しません。
 
