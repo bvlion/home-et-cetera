@@ -8,3 +8,6 @@
 /.env.*
 !/.env.example
 /database/dumps/
+
+# cloud-glanceのGitHub Actions認証で一時生成する認証ファイル。
+/gha-creds-*.json

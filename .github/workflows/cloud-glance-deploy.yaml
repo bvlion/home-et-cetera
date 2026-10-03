@@ -1,0 +1,47 @@
+name: cloud-glance Production Deploy
+
+on:
+  push:
+    tags: ['cloud-glance-v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: cloud-glance-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  cloud-glance-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloud-glance
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            cloud-glance/package-lock.json
+            cloud-glance/functions/package-lock.json
+      - run: npm ci
+      - run: npm --prefix functions ci
+      - run: npm run check
+      - run: npm run test:emulators
+      - name: Authenticate to b-glance
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: b-glance
+          workload_identity_provider: ${{ secrets.CLOUD_GLANCE_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.CLOUD_GLANCE_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Deploy cloud-glance Hosting and one HTTP function
+        run: npx --no-install firebase deploy --project b-glance --only hosting,functions:cloud-glance:cloudGlance --non-interactive
+      - name: Verify Hosting and unauthenticated access
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error https://b-glance.web.app/ > /dev/null
+          status=$(curl --silent --show-error -o /dev/null -w '%{http_code}' https://b-glance.web.app/api/session)
+          test "$status" = 401
