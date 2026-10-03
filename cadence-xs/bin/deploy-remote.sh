@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Production update deploy, executed on the XServer host over SSH stdin by
-# .github/workflows/deploy.yaml. Not intended to be executed directly on the
+# .github/workflows/cadence-xs-deploy.yaml. Not intended to be executed directly on the
 # GitHub Actions runner.
 #
 # Required environment variables (exported by the caller before this script

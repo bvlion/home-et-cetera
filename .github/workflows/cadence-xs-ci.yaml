@@ -25,7 +25,7 @@ jobs:
           filters: |
             should-verify-cadence-xs:
               - 'cadence-xs/**'
-              - '.github/workflows/ci.yaml'
+              - '.github/workflows/cadence-xs-ci.yaml'
 
       # ローカルの検証用Compose(compose.check.yaml)と同じ安全な入口を使用する。
       # make check は検証専用のCompose project(cadence-xs-check)だけを使い、

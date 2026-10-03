@@ -15,7 +15,7 @@ cadence-xsに関する作業では、必ず[専用AGENTS.md](cadence-xs/AGENTS.m
 
 専用ルールは`cadence-xs/`配下の実装・設定・検証・関連文書と、次のリポジトリ共通配置にあるcadence-xs用の設定に適用します。
 
-- `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml`
+- `.github/workflows/cadence-xs-ci.yaml`、`.github/workflows/cadence-xs-deploy.yaml`
 - `.github/dependabot.yml`のComposer設定
 
 他サービスのディレクトリや、そのサービス専用の設定・検証・デプロイにはcadence-xs専用ルールを適用しません。サービスごとのAGENTS.mdを参照してください。

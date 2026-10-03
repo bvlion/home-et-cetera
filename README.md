@@ -21,7 +21,7 @@
 | `cadence-xs/README.md`、`cadence-xs/AGENTS.md` | cadence-xs専用の説明・作業ルール |
 | `cadence-xs/` | cadence-xsの実装・依存関係・データベース定義・ローカル開発・検証設定 |
 | `cadence-xs/docs/` | cadence-xsの本番環境・旧環境データ移行資料 |
-| `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml` | cadence-xsの検証・本番デプロイ |
+| `.github/workflows/cadence-xs-ci.yaml`、`.github/workflows/cadence-xs-deploy.yaml` | cadence-xsの検証・本番デプロイ |
 | `.github/dependabot.yml` | cadence-xsのComposer依存関係とGitHub Actionsの更新設定 |
 
 開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`cadence-xs-v*`タグによる本番デプロイでは、対象タグの`cadence-xs/`だけを更新します。
@@ -47,7 +47,7 @@
 - PRはユーザーの明示的な承認を得るまでマージしません。
 - Issueに記載された範囲を最小差分で実装し、明示されていない横展開は行いません。
 
-`cadence-xs CI`はcadence-xs専用のworkflowです。mainへのpushとすべてのPull Requestで`test`ジョブを起動し、`cadence-xs/`または`.github/workflows/ci.yaml`に変更がある場合だけ既存の`make check`を実行します。ルートREADMEのみ・他サービスのみの変更では重い検証をスキップし、変更判定が成功すれば`test`も成功します。変更判定や検証の失敗はジョブの失敗となります。main rulesetの`Protect main`に設定済みのGitHub Actionsの必須チェック`test`と一致するため、管理設定の変更は不要です。他サービスのCIと必要な必須チェックは、そのサービスを統合するIssueで追加します。
+`cadence-xs CI`はcadence-xs専用のworkflowです。mainへのpushとすべてのPull Requestで`test`ジョブを起動し、`cadence-xs/`または`.github/workflows/cadence-xs-ci.yaml`に変更がある場合だけ既存の`make check`を実行します。ルートREADMEのみ・他サービスのみの変更では重い検証をスキップし、変更判定が成功すれば`test`も成功します。変更判定や検証の失敗はジョブの失敗となります。main rulesetの`Protect main`に設定済みのGitHub Actionsの必須チェック`test`と一致するため、管理設定の変更は不要です。他サービスのCIと必要な必須チェックは、そのサービスを統合するIssueで追加します。
 
 ## Publicリポジトリの運用
 

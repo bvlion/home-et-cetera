@@ -276,7 +276,7 @@ make check
 - `make check`は`compose.check.yaml`を検証専用のCompose project（`cadence-xs-check`）で実行します。開発用`compose.yaml`が使うcontainer・network・volume・host port（8080番）とは別のprojectであり、開発用の`database` volumeを共有しません。検証用DBは検証専用の使い捨てvolumeを使用します。
 - 検証用のappコンテナは実`.env`を読み込みません。`.env.example`の架空値だけを`/app/.env`へread-onlyで重ね、Composeの変数展開にも`--env-file .env.example`を使用します。
 - 成功・失敗にかかわらず、`make check`終了時に検証専用project（`cadence-xs-check`）のcontainer・network・volumeだけをcleanupします。開発中の`compose.yaml`側のcontainer・DBには一切影響しません。
-- GitHub Actionsのcadence-xs専用workflow（リポジトリルートの`.github/workflows/ci.yaml`、表示名`cadence-xs CI`）はPull Requestとmainへのpushで`test`ジョブを起動します。`cadence-xs/`またはCI定義に変更がある場合だけ、`cadence-xs/`で同じ`make check`を実行します。ルートREADMEのみなど無関係な変更では重い検証をスキップし、変更判定が成功すればジョブを成功させます。変更判定や検証が失敗した場合はジョブを失敗させます。既存のmain rulesetの必須チェック`test`と一致するため、管理設定の変更は不要です。リポジトリルートからは`make -C cadence-xs check`を実行します。
+- GitHub Actionsのcadence-xs専用workflow（リポジトリルートの`.github/workflows/cadence-xs-ci.yaml`、表示名`cadence-xs CI`）はPull Requestとmainへのpushで`test`ジョブを起動します。`cadence-xs/`またはCI定義に変更がある場合だけ、`cadence-xs/`で同じ`make check`を実行します。ルートREADMEのみなど無関係な変更では重い検証をスキップし、変更判定が成功すればジョブを成功させます。変更判定や検証が失敗した場合はジョブを失敗させます。既存のmain rulesetの必須チェック`test`と一致するため、管理設定の変更は不要です。リポジトリルートからは`make -C cadence-xs check`を実行します。
 
 `make check`が異常終了してcleanupが行われなかった場合は、検証専用projectだけを対象に手動でcleanupできます。
 
@@ -306,7 +306,7 @@ make db-wipe CONFIRM=yes
 
 ## 本番デプロイ
 
-`cadence-xs-v*`形式のGitタグ(例: `cadence-xs-v1.0.0`)をpushすると、GitHub Actions(`.github/workflows/deploy.yaml`)がそのタグの指すcommitから`cadence-xs/`だけをXServer本番環境へ自動デプロイします。他サービス用のタグ、従来の`v*`タグ、`main`へのpushやPull Requestではデプロイされません。初回の環境構築(「初回デプロイ」節)は引き続き手動で行いますが、以降の更新デプロイは`cadence-xs-v*`タグのpushだけで完了します。詳細は「自動デプロイ(`cadence-xs-v*`タグpush)」節を参照してください。
+`cadence-xs-v*`形式のGitタグ(例: `cadence-xs-v1.0.0`)をpushすると、GitHub Actions(`.github/workflows/cadence-xs-deploy.yaml`)がそのタグの指すcommitから`cadence-xs/`だけをXServer本番環境へ自動デプロイします。他サービス用のタグ、従来の`v*`タグ、`main`へのpushやPull Requestではデプロイされません。初回の環境構築(「初回デプロイ」節)は引き続き手動で行いますが、以降の更新デプロイは`cadence-xs-v*`タグのpushだけで完了します。詳細は「自動デプロイ(`cadence-xs-v*`タグpush)」節を参照してください。
 
 ### 配置の考え方
 
@@ -415,7 +415,7 @@ make db-wipe CONFIRM=yes
 
 ### 自動デプロイ(`cadence-xs-v*`タグpush)
 
-`cadence-xs-v*`形式のタグをpushすると、GitHub Actions(`.github/workflows/deploy.yaml`)が次を自動実行します。
+`cadence-xs-v*`形式のタグをpushすると、GitHub Actions(`.github/workflows/cadence-xs-deploy.yaml`)が次を自動実行します。
 
 1. 本番の`<checkout-directory>/cadence-xs`内にtracked変更がないことを確認します。ある場合は上書きせずデプロイを失敗させます。ルートファイルなど、サービス外の変更・削除は確認対象にしません。
 2. pushされたタグをfetchし、そのタグが最終的に指すcommit(軽量タグ・annotated tagのいずれでも同じ結果になります)がrunnerで確定したcommitと一致することを確認します。`git restore --staged --worktree`でそのcommitの`cadence-xs/`だけを反映し、対象タグで削除されたサービス内のtrackedファイルも削除します。その後、`git reset --mixed --quiet`でHEADとindexをデプロイ済みcommitへ合わせます。このresetは作業ツリーのファイルを書き換えません。他のパスは更新・復元・削除せず、実行時点の`origin/main`も使用しません。
