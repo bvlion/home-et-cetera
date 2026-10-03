@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Production update deploy, executed on the XServer host over SSH stdin by
-# .github/workflows/deploy.yaml. Not intended to be executed directly on the
+# .github/workflows/cadence-xs-deploy.yaml. Not intended to be executed directly on the
 # GitHub Actions runner.
 #
 # Required environment variables (exported by the caller before this script
@@ -9,7 +9,7 @@
 #   DEPLOY_PATH            Absolute path to the repository checkout.
 #   DEPLOY_COMPOSER_PATH   Absolute path to the cadence-xs-dedicated composer.phar.
 #   DEPLOY_PUBLIC_PATH     Absolute path to the public_html directory.
-#   TAG_NAME               Pushed tag name (e.g. v1.0.0).
+#   TAG_NAME               Pushed tag name (e.g. cadence-xs-v1.0.0).
 #   EXPECTED_COMMIT        Commit SHA the pushed tag must resolve to.
 
 set -euo pipefail
@@ -18,8 +18,8 @@ PHP_BIN=/opt/php-8.5.5/bin/php
 
 cd "$DEPLOY_PATH"
 
-if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-    echo "Deploy aborted: production working tree has unexpected tracked changes." >&2
+if [ -n "$(git status --porcelain --untracked-files=no -- cadence-xs/)" ]; then
+    echo "Deploy aborted: cadence-xs working tree has unexpected tracked changes." >&2
     exit 1
 fi
 
@@ -32,7 +32,10 @@ if [ "$RESOLVED_COMMIT" != "$EXPECTED_COMMIT" ]; then
     exit 1
 fi
 
-git checkout --detach "$RESOLVED_COMMIT"
+# Update only the service, including removal of files deleted in the target.
+git restore --source="$RESOLVED_COMMIT" --staged --worktree -- cadence-xs/
+# Record the deployed commit and align the index without writing other paths.
+git reset --mixed --quiet "$RESOLVED_COMMIT"
 
 cd "$DEPLOY_PATH/cadence-xs"
 

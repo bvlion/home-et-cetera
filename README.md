@@ -21,10 +21,10 @@
 | `cadence-xs/README.md`、`cadence-xs/AGENTS.md` | cadence-xs専用の説明・作業ルール |
 | `cadence-xs/` | cadence-xsの実装・依存関係・データベース定義・ローカル開発・検証設定 |
 | `cadence-xs/docs/` | cadence-xsの本番環境・旧環境データ移行資料 |
-| `.github/workflows/ci.yaml`、`.github/workflows/deploy.yaml` | cadence-xsの検証・本番デプロイ |
+| `.github/workflows/cadence-xs-ci.yaml`、`.github/workflows/cadence-xs-deploy.yaml` | cadence-xsの検証・本番デプロイ |
 | `.github/dependabot.yml` | cadence-xsのComposer依存関係とGitHub Actionsの更新設定 |
 
-開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`v*`タグによる本番デプロイはcadence-xs用です。
+開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`cadence-xs-v*`タグによる本番デプロイでは、対象タグの`cadence-xs/`だけを更新します。
 
 ## サービスを追加する方針
 
@@ -35,7 +35,7 @@
 
 ## リポジトリ名
 
-リポジトリ名は`home-et-cetera`です。Issue #69で、BvlionBatch5専用だった旧名称から家庭内サービス全体を表す名称へ変更しました。Issue #87でBvlionBatch5のサービス名を`cadence-xs`へ変更し、実装・設定を同名ディレクトリへ移しました。XServerの実行基盤と`v*`タグによるデプロイ方式は維持します。
+リポジトリ名は`home-et-cetera`です。Issue #69で、BvlionBatch5専用だった旧名称から家庭内サービス全体を表す名称へ変更しました。Issue #87でBvlionBatch5のサービス名を`cadence-xs`へ変更し、実装・設定を同名ディレクトリへ移しました。XServerの実行基盤は維持します。Issue #92で、デプロイ対象を`cadence-xs/`に限定し、リリースタグを`cadence-xs-v*`へ変更しました。
 
 旧リポジトリ名を使用しているcloneでは、`origin`を`https://github.com/bvlion/home-et-cetera.git`へ更新してください。本番checkoutも同じ対象ですが、更新は利用者が既存の配置で行います。checkout先・公開先・GitHub Secretsは維持します。Issue #87の配置変更では、`.env`の配置、公開用`index.php`のリンク先、既存ローカルDBの引き継ぎが影響を受けます。[専用README](cadence-xs/README.md)の切り替え手順を参照してください。
 
@@ -46,6 +46,8 @@
 - 1つのIssueにつき、1つのブランチと1つのPRを作成します。
 - PRはユーザーの明示的な承認を得るまでマージしません。
 - Issueに記載された範囲を最小差分で実装し、明示されていない横展開は行いません。
+
+`cadence-xs CI`はcadence-xs専用のworkflowです。mainへのpushとすべてのPull Requestで`test`ジョブを起動し、`cadence-xs/`または`.github/workflows/cadence-xs-ci.yaml`に変更がある場合だけ既存の`make check`を実行します。ルートREADMEのみ・他サービスのみの変更では重い検証をスキップし、変更判定が成功すれば`test`も成功します。変更判定や検証の失敗はジョブの失敗となります。main rulesetの`Protect main`に設定済みのGitHub Actionsの必須チェック`test`と一致するため、管理設定の変更は不要です。他サービスのCIと必要な必須チェックは、そのサービスを統合するIssueで追加します。
 
 ## Publicリポジトリの運用
 

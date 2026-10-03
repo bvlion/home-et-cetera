@@ -1,4 +1,4 @@
-name: CI
+name: cadence-xs CI
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   test:
@@ -17,9 +18,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Detect cadence-xs changes
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            should-verify-cadence-xs:
+              - 'cadence-xs/**'
+              - '.github/workflows/cadence-xs-ci.yaml'
+
       # ローカルの検証用Compose(compose.check.yaml)と同じ安全な入口を使用する。
       # make check は検証専用のCompose project(cadence-xs-check)だけを使い、
       # 成功・失敗にかかわらず自分自身でそのprojectをcleanupする。
       - name: make check
+        if: steps.filter.outputs.should-verify-cadence-xs == 'true'
         working-directory: cadence-xs
         run: make check

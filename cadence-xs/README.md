@@ -276,7 +276,7 @@ make check
 - `make check`は`compose.check.yaml`を検証専用のCompose project（`cadence-xs-check`）で実行します。開発用`compose.yaml`が使うcontainer・network・volume・host port（8080番）とは別のprojectであり、開発用の`database` volumeを共有しません。検証用DBは検証専用の使い捨てvolumeを使用します。
 - 検証用のappコンテナは実`.env`を読み込みません。`.env.example`の架空値だけを`/app/.env`へread-onlyで重ね、Composeの変数展開にも`--env-file .env.example`を使用します。
 - 成功・失敗にかかわらず、`make check`終了時に検証専用project（`cadence-xs-check`）のcontainer・network・volumeだけをcleanupします。開発中の`compose.yaml`側のcontainer・DBには一切影響しません。
-- GitHub Actions（リポジトリルートの`.github/workflows/ci.yaml`）も`cadence-xs/`で同じ`make check`を使用します。リポジトリルートからは`make -C cadence-xs check`を実行します。
+- GitHub Actionsのcadence-xs専用workflow（リポジトリルートの`.github/workflows/cadence-xs-ci.yaml`、表示名`cadence-xs CI`）はPull Requestとmainへのpushで`test`ジョブを起動します。`cadence-xs/`またはCI定義に変更がある場合だけ、`cadence-xs/`で同じ`make check`を実行します。ルートREADMEのみなど無関係な変更では重い検証をスキップし、変更判定が成功すればジョブを成功させます。変更判定や検証が失敗した場合はジョブを失敗させます。既存のmain rulesetの必須チェック`test`と一致するため、管理設定の変更は不要です。リポジトリルートからは`make -C cadence-xs check`を実行します。
 
 `make check`が異常終了してcleanupが行われなかった場合は、検証専用projectだけを対象に手動でcleanupできます。
 
@@ -306,12 +306,12 @@ make db-wipe CONFIRM=yes
 
 ## 本番デプロイ
 
-`v*`形式のGitタグ(例: `v1.0.0`)をpushすると、GitHub Actions(`.github/workflows/deploy.yaml`)がそのタグの指すcommitをXServer本番環境へ自動デプロイします。`main`へのpushやPull Requestではデプロイされません。初回の環境構築(「初回デプロイ」節)は引き続き手動で行いますが、以降の更新デプロイは`v*`タグのpushだけで完了します。詳細は「自動デプロイ(`v*`タグpush)」節を参照してください。
+`cadence-xs-v*`形式のGitタグ(例: `cadence-xs-v1.0.0`)をpushすると、GitHub Actions(`.github/workflows/cadence-xs-deploy.yaml`)がそのタグの指すcommitから`cadence-xs/`だけをXServer本番環境へ自動デプロイします。他サービス用のタグ、従来の`v*`タグ、`main`へのpushやPull Requestではデプロイされません。初回の環境構築(「初回デプロイ」節)は引き続き手動で行いますが、以降の更新デプロイは`cadence-xs-v*`タグのpushだけで完了します。詳細は「自動デプロイ(`cadence-xs-v*`タグpush)」節を参照してください。
 
 ### 配置の考え方
 
 - ドメインのドキュメントルート(`public_html`)は固定であり、変更できません。ここには公開してよいファイルだけを置きます。
-- リポジトリcheckoutは、アカウントホーム配下かつ`public_html`外へ配置します。以下ではcheckoutのルートを`<checkout-directory>`、サービス本体の`<checkout-directory>/cadence-xs`を`<app-directory>`と表記します。アプリ本体(`bootstrap`、`src`、`vendor`、`composer.*`、`database`、`bin`、`.env`など)は`<app-directory>`内にあります。実際の絶対パスはリポジトリへ記載しません。
+- Gitリポジトリは、アカウントホーム配下かつ`public_html`外へ配置し、作業ツリーには`cadence-xs/`だけを反映します。以下ではcheckoutのルートを`<checkout-directory>`、サービス本体の`<checkout-directory>/cadence-xs`を`<app-directory>`と表記します。アプリ本体(`bootstrap`、`src`、`vendor`、`composer.*`、`database`、`bin`、`.env`など)は`<app-directory>`内にあります。実際の絶対パスはリポジトリへ記載しません。
 - `public_html`には次の2つだけを配置します。
   - `index.php`: `<app-directory>/public/index.php`へのシンボリックリンク
   - `.htaccess`: `<app-directory>/public/.htaccess`をコピーした通常ファイル
@@ -319,12 +319,15 @@ make db-wipe CONFIRM=yes
 
 ### 初回デプロイ
 
-1. SSHでログインし、`<checkout-directory>`を作成してリポジトリを取得します。
+1. SSHでログインし、`<checkout-directory>`を作成してcheckoutせずにリポジトリを取得します。`<release-tag>`には、このデプロイ方式を含む`cadence-xs-v*`形式のリリースタグを指定し、`cadence-xs/`だけを反映します。
 
     ```shell
     mkdir -p <checkout-directory>
     cd <checkout-directory>
-    git clone https://github.com/bvlion/home-et-cetera.git .
+    git clone --no-checkout https://github.com/bvlion/home-et-cetera.git .
+    git fetch origin tag <release-tag>
+    git restore --source=<release-tag> --staged --worktree -- cadence-xs/
+    git reset --mixed --quiet <release-tag>
     ```
 
 2. 専用のComposerを、検証済みチェックサムでcadence-xs専用の非公開ツールディレクトリへ配置します。共有Composerは使用・更新しません。Composerの公式インストーラー検証手順に沿って、ダウンロード・SHA-384検証・インストール・後始末を1つのスクリプトで実行します。処理全体をサブシェル`( ... )`で囲んでいるため、途中で失敗しても現在のSSH接続(親シェル)は終了しません。ツールディレクトリの絶対パスは、貼り付け後の対話プロンプトで入力します(コマンド内に埋め込みません)。
@@ -410,12 +413,12 @@ make db-wipe CONFIRM=yes
 
 8. 「/healthに依存しない疎通確認」を実施します。
 
-### 自動デプロイ(`v*`タグpush)
+### 自動デプロイ(`cadence-xs-v*`タグpush)
 
-`v*`形式のタグをpushすると、GitHub Actions(`.github/workflows/deploy.yaml`)が次を自動実行します。実行内容は、以前手動で行っていた更新デプロイ手順と同じです。
+`cadence-xs-v*`形式のタグをpushすると、GitHub Actions(`.github/workflows/cadence-xs-deploy.yaml`)が次を自動実行します。
 
-1. 本番の`<checkout-directory>`にtracked変更がないことを確認します。ある場合は上書き・resetせずデプロイを失敗させます。
-2. pushされたタグをfetchし、そのタグが最終的に指すcommit(軽量タグ・annotated tagのいずれでも同じ結果になります)へ本番checkoutを切り替えます。実行時点の`origin/main`は使用しません。
+1. 本番の`<checkout-directory>/cadence-xs`内にtracked変更がないことを確認します。ある場合は上書きせずデプロイを失敗させます。ルートファイルなど、サービス外の変更・削除は確認対象にしません。
+2. pushされたタグをfetchし、そのタグが最終的に指すcommit(軽量タグ・annotated tagのいずれでも同じ結果になります)がrunnerで確定したcommitと一致することを確認します。`git restore --staged --worktree`でそのcommitの`cadence-xs/`だけを反映し、対象タグで削除されたサービス内のtrackedファイルも削除します。その後、`git reset --mixed --quiet`でHEADとindexをデプロイ済みcommitへ合わせます。このresetは作業ツリーのファイルを書き換えません。他のパスは更新・復元・削除せず、実行時点の`origin/main`も使用しません。
 3. `<checkout-directory>/cadence-xs`へ移動し、`DEPLOY_COMPOSER_PATH`のcadence-xs専用Composerと`/opt/php-8.5.5/bin/php`を使い、`composer.lock`に基づいて`--no-dev --optimize-autoloader --classmap-authoritative`で本番依存をインストールします。
 4. `/opt/php-8.5.5/bin/php bin/migrate.php`で未適用マイグレーションを適用します。
 5. `<app-directory>/public/.htaccess`を`public_html`側へ上書きコピーします。`index.php`のシンボリックリンクは初回作成時のものを再利用します。
@@ -425,11 +428,11 @@ make db-wipe CONFIRM=yes
 
 #### 通常のリリース手順
 
-リリースしたいcommitへタグを作成してpushするだけで、そのcommitがそのまま本番へ反映されます。
+リリースしたいcommitへタグを作成してpushするだけで、そのcommitの`cadence-xs/`が本番へ反映されます。
 
 ```shell
-git tag v1.0.0
-git push origin v1.0.0
+git tag cadence-xs-v1.0.0
+git push origin cadence-xs-v1.0.0
 ```
 
 #### 必要なGitHub Secrets
@@ -459,22 +462,28 @@ git push origin v1.0.0
 3. 旧checkoutルートの`.env`を`<checkout-directory>/cadence-xs/.env`へ安全に移し、権限600と本番設定を維持します。移行先に既存`.env`があれば上書きせず確認します。環境変数注入で運用している場合は、その設定が新配置の実行でも有効であることを確認します。
 4. `<app-directory>`で「初回デプロイ」の手順3・7に従い、既存専用Composerによる依存関係の導入とマイグレーションを実行します。旧ルートの`vendor`は新配置から参照されません。
 5. 公開用`index.php`が既存シンボリックリンクであることを確認してから、リンク先を`<app-directory>/public/index.php`へ張り替えます。通常ファイルや想定外のリンクなら上書きせず停止します。`.htaccess`は新しい`<app-directory>/public/.htaccess`から通常ファイルとしてコピーします。
-6. 「/healthに依存しない疎通確認」に従い、未認証の2 APIが401を返すことと、利用者が許可した機能確認を行います。以後の更新は従来の`v*`タグpushで行います。
+6. 「/healthに依存しない疎通確認」に従い、未認証の2 APIが401を返すことと、利用者が許可した機能確認を行います。以後の更新は`cadence-xs-v*`タグpushで行います。
 
 自動デプロイは`.env`の移動と`index.php`のリンクの張り替えを行いません。旧リンクのままでは未認証疎通確認が失敗します。旧配置のcommitへ戻す場合は、旧ルートの`.env`・そのcommitの依存関係・公開リンク・`.htaccess`も旧配置へ戻してください。旧DBデータの再importは、この配置変更には不要です。
 
 SSH host key verificationは`DEPLOY_SSH_KNOWN_HOSTS`を使って必ず有効な状態で行い、`StrictHostKeyChecking=no`等での無効化は行いません。
+
+#### 不要ファイルの初回削除（Issue #92・利用者側の作業）
+
+既存環境では、利用者が初回のみ不要なルートのモノレポ管理用ファイル（ルートの`README.md`、`AGENTS.md`、`.github/`など）や旧配置由来の残存物を確認して削除します。`<checkout-directory>/.git`はタグのfetchとデプロイ済みcommitの記録に必要なため残します。稼働中の`cadence-xs/`（`.env`、`vendor`を含む）、専用Composer、公開ディレクトリと`index.php`のリンクも維持します。自動デプロイは不要ファイルを削除せず、削除済みのサービス外ファイルを復元しません。
+
+サービス外のtrackedファイルを削除すると、リポジトリ全体の`git status`には削除が表示されます。この状態でも自動デプロイは成立します。以後、本番でリポジトリ全体をcheckoutすると不要ファイルが再配置されるため、サービスだけを反映する手順を使用してください。
 
 #### 初回設定(利用者側の作業)
 
 1. cadence-xsデプロイ専用のSSH鍵ペアを作成します。
 2. 作成した公開鍵を、XServer側の対象アカウントのSSH認証(`~/.ssh/authorized_keys`)へ登録します。
 3. 上記の必要なGitHub Secretsをすべて登録します。
-4. `v*`形式のタグを作成・pushし、GitHub Actionsのデプロイが成功することを確認します。
+4. `cadence-xs-v*`形式のタグを作成・pushし、GitHub Actionsのデプロイが成功することを確認します。
 
 ### 失敗時にどこまで戻すか
 
-- **アプリコード**: `git log`で直前の安定コミットを確認し、`git checkout <直前のコミット>`で戻します。その後、そのコミット時点の`composer.lock`に合わせて`composer install`を再実行します。
+- **アプリコード**: `git log`や過去のデプロイ実行結果で直前の安定commitを確認します。`<checkout-directory>`で`cadence-xs/`内にtracked変更がないことを確認し、`git restore --source=<直前のcommit> --staged --worktree -- cadence-xs/`と`git reset --mixed --quiet <直前のcommit>`でサービスだけを戻します。その後、そのcommit時点の`composer.lock`に合わせて`composer install`を再実行し、`.htaccess`もコピーして未認証疎通確認を行います。旧ルート配置へ戻す場合は、前述のIssue #87の注意事項に従います。
 - **マイグレーション**: `bin/migrate.php`にロールバック機能はありません。マイグレーション適用後に問題が起きた場合は、データベースのバックアップからの復元、または追加のマイグレーションでの是正を検討し、適用済みのマイグレーションファイルは変更しません。
 - **公開ファイル**: `public_html`側は`index.php`のシンボリックリンクと`.htaccess`の通常ファイルの2つだけのため、問題が起きた場合は`index.php`のリンクを削除する、または`.htaccess`を退避すれば公開を止められます。
 
@@ -514,7 +523,7 @@ API疎通確認の前に、Slack・IMAPそれぞれの外部サービスへの�
 
 2つのAPIすべてが、Authorizationヘッダーなしで401を返すことを確認します。これで確認できるのは、ルーティングとBearer Token認証による拒否が機能していることです。`Authorization`ヘッダーが`.htaccess`のRewriteによってPHPまで到達しているかどうかは、この時点では確認できません(ヘッダーがまったく転送されていなくても、未指定の場合と同じ401になるためです)。ヘッダー転送の確認は、後述の「認証済み確認」で正しいBearer Tokenを使ったリクエストが成功することによって行います。
 
-`v*`タグによる自動デプロイでは、デプロイ完了後にこの確認を`bin/check-deploy-connectivity.sh`が自動実行し、2件のいずれかが401以外の場合はGitHub Actions全体を失敗させます。このスクリプトはBearer Tokenを一切使用せず、Slack投稿・IMAP処理・DB更新などの副作用も発生させません。GitHub Actions専用ではなく、ローカルやSSH先から手動実行する場合にも同じスクリプトを再利用できます。
+`cadence-xs-v*`タグによる自動デプロイでは、デプロイ完了後にこの確認を`bin/check-deploy-connectivity.sh`が自動実行し、2件のいずれかが401以外の場合はGitHub Actions全体を失敗させます。このスクリプトはBearer Tokenを一切使用せず、Slack投稿・IMAP処理・DB更新などの副作用も発生させません。GitHub Actions専用ではなく、ローカルやSSH先から手動実行する場合にも同じスクリプトを再利用できます。
 
 ```shell
 bin/check-deploy-connectivity.sh https://<domain>
@@ -531,7 +540,7 @@ curl -i -X POST https://<domain>/api/dating/notify
 
 #### 2. 認証済み確認
 
-この確認は`v*`タグによる自動デプロイには含まれません。正規のBearer Tokenを使った本番APIの実行、`bin/check-slack.php`による実際のSlack投稿、IMAPでのメール既読化・移動などの副作用を伴う確認は、デプロイのたびに自動実行せず、必要な場合だけ利用者が手動で行います。
+この確認は`cadence-xs-v*`タグによる自動デプロイには含まれません。正規のBearer Tokenを使った本番APIの実行、`bin/check-slack.php`による実際のSlack投稿、IMAPでのメール既読化・移動などの副作用を伴う確認は、デプロイのたびに自動実行せず、必要な場合だけ利用者が手動で行います。
 
 副作用(実際のSlack投稿・メールの既読化や移動)を発生させない状態を用意したうえで、正規のBearer Tokenを付与して確認します。正しいBearer Tokenを付与したリクエストが期待どおりの応答を返すことにより、`Authorization`ヘッダーが`.htaccess`のRewriteを経由してPHPまで到達していることも合わせて確認できます。
 

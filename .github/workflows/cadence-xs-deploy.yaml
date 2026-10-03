@@ -1,9 +1,9 @@
-name: Production Deploy
+name: cadence-xs Production Deploy
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'cadence-xs-v*'
 
 permissions:
   contents: read
@@ -44,9 +44,9 @@ jobs:
       # Secrets are passed to the remote shell only via stdin (never as SSH
       # command-line arguments), so they never appear in the remote host's
       # process list. See cadence-xs/bin/deploy-remote.sh for the deploy steps it runs
-      # (checkout of the tagged commit, composer install, migration,
+      # (cadence-xs-only update from the tagged commit, composer install, migration,
       # public/.htaccess sync)。手順はcadence-xs/README.mdの
-      # 「自動デプロイ(`v*`タグpush)」節を参照。
+      # 「自動デプロイ(`cadence-xs-v*`タグpush)」節を参照。
       - name: Deploy to production
         env:
           DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
