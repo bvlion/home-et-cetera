@@ -4,4 +4,3 @@ dist/
 *-debug.log*
 functions/.secret.local
 functions/.env*
-gha-creds-*.json
