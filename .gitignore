@@ -1,2 +1,0 @@
-# google-github-actions/auth が GitHub Actions 実行中に生成する認証ファイル。
-/gha-creds-*.json
