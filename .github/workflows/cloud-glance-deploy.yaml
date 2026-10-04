@@ -29,8 +29,7 @@ jobs:
             cloud-glance/functions/package-lock.json
       - run: npm ci
       - run: npm --prefix functions ci
-      - run: npm run check
-      - run: npm run test:emulators
+      - run: npm run build
       - name: Authenticate to b-glance
         uses: google-github-actions/auth@v3
         with:

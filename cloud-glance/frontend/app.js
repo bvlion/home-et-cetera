@@ -3,6 +3,14 @@ import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onA
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
+const askForm = document.getElementById('askForm');
+const answerPanel = document.getElementById('answerPanel');
+const answerElement = document.getElementById('answer');
+const citationsList = document.getElementById('citations');
+const statusMessage = document.getElementById('status');
+const shareStatusMessage = document.getElementById('shareStatus');
+const errorMessage = document.getElementById('error');
+const loginButton = document.getElementById('login');
 const questionInput = document.getElementById('question');
 const askButton = document.getElementById('ask');
 const shareButton = document.getElementById('share');
@@ -19,17 +27,17 @@ clearButton.addEventListener('click', function () {
   currentQuestion = '';
   currentAnswer = '';
   currentCitations = [];
-  document.getElementById('answer').replaceChildren();
-  document.getElementById('citations').replaceChildren();
-  document.getElementById('answerPanel').hidden = true;
-  document.getElementById('status').textContent = '';
-  document.getElementById('shareStatus').textContent = '';
-  document.getElementById('error').textContent = '';
+  answerElement.replaceChildren();
+  citationsList.replaceChildren();
+  answerPanel.hidden = true;
+  statusMessage.textContent = '';
+  shareStatusMessage.textContent = '';
+  errorMessage.textContent = '';
   shareButton.disabled = true;
   questionInput.focus();
 });
 
-document.getElementById('askForm').addEventListener('submit', async function (event) {
+askForm.addEventListener('submit', async function (event) {
   event.preventDefault();
   const question = questionInput.value.trim();
   if (!question || askButton.disabled || !isAuthorized) return;
@@ -37,10 +45,10 @@ document.getElementById('askForm').addEventListener('submit', async function (ev
   askButton.disabled = true;
   clearButton.disabled = true;
   shareButton.disabled = true;
-  document.getElementById('error').textContent = '';
-  document.getElementById('shareStatus').textContent = '';
-  document.getElementById('status').textContent = '回答を取得しています…';
-  document.getElementById('answerPanel').hidden = true;
+  errorMessage.textContent = '';
+  shareStatusMessage.textContent = '';
+  statusMessage.textContent = '回答を取得しています…';
+  answerPanel.hidden = true;
   try {
     const response = await fetch('/api/ask', {
       method: 'POST',
@@ -54,14 +62,14 @@ document.getElementById('askForm').addEventListener('submit', async function (ev
     currentAnswer = result.answer;
     currentCitations = result.citations || [];
     renderCitations(currentCitations);
-    document.getElementById('answerPanel').hidden = false;
+    answerPanel.hidden = false;
   } catch (error) {
     if (!isAuthorized || auth.currentUser !== user) return;
-    document.getElementById('error').textContent = error.message || '回答を取得できませんでした。';
-    document.getElementById('answerPanel').hidden = !currentAnswer;
+    errorMessage.textContent = error.message || '回答を取得できませんでした。';
+    answerPanel.hidden = !currentAnswer;
   } finally {
     if (isAuthorized && auth.currentUser === user) {
-      document.getElementById('status').textContent = '';
+      statusMessage.textContent = '';
       askButton.disabled = false;
       clearButton.disabled = false;
       shareButton.disabled = !currentAnswer;
@@ -75,8 +83,8 @@ shareButton.addEventListener('click', async function () {
   shareButton.disabled = true;
   askButton.disabled = true;
   clearButton.disabled = true;
-  document.getElementById('shareStatus').textContent = 'Slackに共有しています…';
-  document.getElementById('error').textContent = '';
+  shareStatusMessage.textContent = 'Slackに共有しています…';
+  errorMessage.textContent = '';
   try {
     const response = await fetch('/api/share', {
       method: 'POST',
@@ -86,11 +94,11 @@ shareButton.addEventListener('click', async function () {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Slackへの共有に失敗しました。');
     if (!isAuthorized || auth.currentUser !== user) return;
-    document.getElementById('shareStatus').textContent = 'Slackに共有しました。';
+    shareStatusMessage.textContent = 'Slackに共有しました。';
   } catch (error) {
     if (!isAuthorized || auth.currentUser !== user) return;
-    document.getElementById('shareStatus').textContent = '';
-    document.getElementById('error').textContent = error.message || 'Slackへの共有に失敗しました。';
+    shareStatusMessage.textContent = '';
+    errorMessage.textContent = error.message || 'Slackへの共有に失敗しました。';
   } finally {
     if (isAuthorized && auth.currentUser === user) {
       shareButton.disabled = false;
@@ -101,16 +109,14 @@ shareButton.addEventListener('click', async function () {
 });
 
 function renderCitations(citations) {
-  const list = document.getElementById('citations');
-  const answer = document.getElementById('answer');
   const answerCharacters = Array.from(currentAnswer);
   let position = 0;
   let answerMarkdown = '';
   let citationMarker = 'CloudGlanceCitation';
   while (currentAnswer.includes(citationMarker)) citationMarker += 'X';
   const inlineLinks = [];
-  list.replaceChildren();
-  answer.replaceChildren();
+  citationsList.replaceChildren();
+  answerElement.replaceChildren();
   citations.slice().sort(function (first, second) {
     return first.startIndex - second.startIndex || first.endIndex - second.endIndex;
   }).forEach(function (citation, index) {
@@ -121,13 +127,13 @@ function renderCitations(citations) {
     link.rel = 'noopener noreferrer';
     link.textContent = citation.title || citation.url;
     item.appendChild(link);
-    list.appendChild(item);
+    citationsList.appendChild(item);
     if (Number.isInteger(citation.startIndex) && Number.isInteger(citation.endIndex) &&
         citation.startIndex >= 0 && citation.endIndex >= citation.startIndex &&
         citation.endIndex <= answerCharacters.length) {
       if (citation.startIndex >= position) {
         const precedingText = answerCharacters.slice(position, citation.startIndex).join('');
-        answer.appendChild(document.createTextNode(precedingText));
+        answerElement.appendChild(document.createTextNode(precedingText));
         answerMarkdown += precedingText;
         position = citation.endIndex;
       }
@@ -135,22 +141,22 @@ function renderCitations(citations) {
       inlineLink.textContent = '[' + (index + 1) + ']';
       inlineLink.setAttribute('aria-label', '出典: ' + (citation.title || citation.url));
       inlineLink.title = citation.title || citation.url;
-      answer.appendChild(inlineLink);
+      answerElement.appendChild(inlineLink);
       inlineLinks[index] = inlineLink;
       answerMarkdown += citationMarker + index + 'End';
     }
   });
   const remainingText = answerCharacters.slice(position).join('');
-  answer.appendChild(document.createTextNode(remainingText));
+  answerElement.appendChild(document.createTextNode(remainingText));
   answerMarkdown += remainingText;
   if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
-    answer.replaceChildren(DOMPurify.sanitize(marked.parse(answerMarkdown), {
+    answerElement.replaceChildren(DOMPurify.sanitize(marked.parse(answerMarkdown), {
       RETURN_DOM_FRAGMENT: true,
       ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'del', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a'],
       ALLOWED_ATTR: ['href', 'title', 'start', 'aria-label']
     }));
     // Markdown解析後の本文へ出典を戻し、強調やコード内でもリンクを維持する。
-    const walker = document.createTreeWalker(answer, NodeFilter.SHOW_TEXT);
+    const walker = document.createTreeWalker(answerElement, NodeFilter.SHOW_TEXT);
     const citationTextNodes = [];
     while (walker.nextNode()) {
       if (walker.currentNode.textContent.includes(citationMarker)) citationTextNodes.push(walker.currentNode);
@@ -163,7 +169,7 @@ function renderCitations(citations) {
       });
       node.replaceWith(fragment);
     });
-    answer.querySelectorAll('a').forEach(function (link) {
+    answerElement.querySelectorAll('a').forEach(function (link) {
       if (!/^https?:\/\//i.test(link.getAttribute('href') || '')) {
         link.removeAttribute('href');
       } else {
@@ -171,15 +177,14 @@ function renderCitations(citations) {
         link.rel = 'noopener noreferrer';
       }
     });
-    answer.style.whiteSpace = '';
+    answerElement.style.whiteSpace = '';
   } else {
-    answer.style.whiteSpace = 'pre-wrap';
-    document.getElementById('error').textContent = 'Markdown表示を読み込めませんでした。再読み込みしてください。';
+    answerElement.style.whiteSpace = 'pre-wrap';
+    errorMessage.textContent = 'Markdown表示を読み込めませんでした。再読み込みしてください。';
   }
 }
 
 
-const loginButton = document.getElementById('login');
 try {
   const response = await fetch('/__/firebase/init.json');
   if (!response.ok) throw new Error('ログインの設定を読み込めませんでした。');
@@ -197,7 +202,7 @@ try {
     try {
       await signInWithRedirect(auth, provider);
     } catch {
-      document.getElementById('error').textContent = 'Googleログインに失敗しました。再度お試しください。';
+      errorMessage.textContent = 'Googleログインに失敗しました。再度お試しください。';
       loginButton.disabled = false;
     }
   });
@@ -207,17 +212,17 @@ try {
     askButton.disabled = true;
     clearButton.disabled = true;
     shareButton.disabled = true;
-    document.getElementById('askForm').hidden = true;
-    document.getElementById('answerPanel').hidden = true;
+    askForm.hidden = true;
+    answerPanel.hidden = true;
     currentQuestion = '';
     currentAnswer = '';
     currentCitations = [];
     questionInput.value = '';
-    document.getElementById('answer').replaceChildren();
-    document.getElementById('citations').replaceChildren();
-    document.getElementById('status').textContent = '';
-    document.getElementById('shareStatus').textContent = '';
-    document.getElementById('error').textContent = '';
+    answerElement.replaceChildren();
+    citationsList.replaceChildren();
+    statusMessage.textContent = '';
+    shareStatusMessage.textContent = '';
+    errorMessage.textContent = '';
     loginButton.hidden = false;
     loginButton.disabled = false;
     if (!user) return;
@@ -231,17 +236,17 @@ try {
       if (auth.currentUser !== user) return;
       isAuthorized = true;
       loginButton.hidden = true;
-      document.getElementById('askForm').hidden = false;
+      askForm.hidden = false;
       askButton.disabled = false;
       clearButton.disabled = false;
       questionInput.focus();
     } catch (error) {
       if (auth.currentUser !== user) return;
-      document.getElementById('error').textContent = error.message || 'ログインを確認できませんでした。';
+      errorMessage.textContent = error.message || 'ログインを確認できませんでした。';
     } finally {
       if (auth.currentUser === user) loginButton.disabled = false;
     }
   });
 } catch {
-  document.getElementById('error').textContent = 'ログインを開始できませんでした。設定を確認して再読み込みしてください。';
+  errorMessage.textContent = 'ログインを開始できませんでした。設定を確認して再読み込みしてください。';
 }

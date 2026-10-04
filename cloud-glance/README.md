@@ -9,13 +9,15 @@
 | 専用Firebase / Google Cloudプロジェクト | `b-glance` |
 | 本番URL | `https://b-glance.web.app` |
 | フロントエンド | Firebase Hosting。`frontend/index.html`、`styles.css`、`app.js`を別ファイルで管理し、`dist/`へビルド |
-| サーバー | Cloud Functions for Firebase第2世代、Node.js 22、HTTP関数 `cloudGlance` の1つ |
+| サーバー | Cloud Functions for Firebase第2世代、Node.js 22、HTTP関数 `cloudGlance` の1つ。Expressで内部ルーティング |
 | 関数リージョン | `asia-east1`。Firebase Hostingの[推奨リージョン](https://firebase.google.com/docs/hosting/functions)からアジアのリージョンを使用 |
 | 認証 | Firebase AuthenticationのGoogleログインとサーバー側allowlist |
 | 本番設定 | Google Cloud Secret Manager |
 | リリース | `cloud-glance-v*` タグpush、cloud-glance専用GitHub Actions |
 
 `/api/session`（GET）、`/api/ask`（POST）、`/api/share`（POST）はすべて1つの関数内で処理します。Hostingが `/api/**` を同じ関数へ転送します。関数URLへ直接アクセスしても、同じGoogleトークン検証とallowlist照合を行います。HTTP関数・データベース・履歴保存機能は追加しません。
+
+サーバーの `functions/index.js` は初期化と単一関数の公開を扱います。`app.js` がExpressのルーティング・入力検証・共通エラー処理、`authentication.js` が認証・allowlist、`settings.js` がSecret定義、`openai.js` と `slack.js` が各外部APIの処理を扱います。CommonJSの既存構成を維持し、ExpressはFirebase Functions SDKと同じ5.2.1を直接依存として明示しています。フロントエンドのDOM参照は `frontend/app.js` の先頭へ揃えています。
 
 HTMLにはCSS・JavaScriptを埋め込みません。Firebase SDK、Marked、DOMPurifyは固定した依存関係をビルドへ含め、実行時のCDN読み込みを置き換えています。Google Apps Scriptの配信・認証・RPC・設定管理・デプロイへの依存はありません。
 
@@ -65,7 +67,7 @@ Google Cloud側でデプロイ用サービスアカウントと[Workload Identit
 
 デプロイ用サービスアカウントにはHosting・Functionsのデプロイ権限（`roles/firebasehosting.admin`、`roles/cloudfunctions.developer`）、Cloud Runの公開呼び出し設定に必要な `roles/run.admin`、プロジェクトのサービス利用権限（`roles/serviceusage.serviceUsageConsumer`）、実行・ビルドサービスアカウントへの `roles/iam.serviceAccountUser` を設定します。Secretの参照・バインドに必要な権限と、ビルドサービスアカウントのCloud Build / Artifact Registry権限も必要です。[FunctionsのIAM要件](https://cloud.google.com/functions/docs/reference/iam/roles)に沿って初回準備と継続デプロイを確認してください。API有効化やIAM付与は管理アカウントで行います。
 
-PRのレビュー・マージ後、リリース対象コミットへ `cloud-glance-v*` タグを付けてpushします。`.github/workflows/cloud-glance-deploy.yaml` が依存関係の復元・テスト・ビルド・エミュレーター検証を行い、`b-glance` のHostingと `functions:cloud-glance:cloudGlance` だけを反映します。本番への同時デプロイはcloud-glance専用のconcurrency groupで制限します。他サービスのデプロイは起動しません。
+PR/mainのCIで検証済みのコミットを対象に、レビュー・マージ後、リリース対象コミットへ `cloud-glance-v*` タグを付けてpushします。`.github/workflows/cloud-glance-deploy.yaml` がデプロイに必要な依存関係の復元・ビルドを行い、`b-glance` のHostingと `functions:cloud-glance:cloudGlance` だけを反映します。本番への同時デプロイはcloud-glance専用のconcurrency groupで制限します。他サービスのデプロイは起動しません。
 
 ローカルからの同等の反映は `cloud-glance/` で検証後に `npx firebase deploy --project b-glance --only hosting,functions:cloud-glance:cloudGlance --non-interactive` を実行します。GitHub Actionsと同じ、Firebase Hosting / Functionsのデプロイです。デプロイ後の自動疎通は公開画面の成功と未ログイン `/api/session` の401を確認します。実アカウントでの受け入れ検証は次節に従います。
 

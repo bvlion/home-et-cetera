@@ -1,7 +1,21 @@
-const { test, beforeEach, afterEach, mock } = require('node:test');
+const { test, before, after, beforeEach, afterEach, mock } = require('node:test');
 const assert = require('node:assert/strict');
 const { cloudGlance } = require('../index');
 const { getAuth } = require('firebase-admin/auth');
+const express = require('express');
+const http = require('node:http');
+
+// Functions Frameworkが付与するJSON本文とrawBodyをHTTPテストでも再現する。
+const server = http.createServer(express().use(express.json({
+  limit: '1mb',
+  verify(request, response, body) { request.rawBody = body; }
+})).use(cloudGlance));
+before(async () => {
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+});
+after(async () => {
+  await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+});
 let request;
 let response;
 let identity;
@@ -16,15 +30,10 @@ beforeEach(() => {
   mock.method(getAuth(), 'verifyIdToken', async () => identity);
   mock.method(global, 'fetch', async () => { throw new Error('外部通信は禁止'); });
   request = {
-    headers: {}, path: '/api/ask', method: 'POST', body: { question: '架空の質問' },
-    get: () => 'Bearer fictional-token', is: () => true
+    headers: { Authorization: 'Bearer fictional-token', 'Content-Type': 'application/json' },
+    path: '/api/ask', method: 'POST', body: { question: '架空の質問' }
   };
-  response = {
-    statusCode: 200, headers: {}, body: undefined,
-    set(key, value) { this.headers[key] = value; return this; },
-    status(value) { this.statusCode = value; return this; },
-    json(value) { this.body = value; return this; }
-  };
+  response = undefined;
 });
 afterEach(() => mock.restoreAll());
 
@@ -39,17 +48,17 @@ for (const path of ['/api/session', '/api/ask', '/api/share']) {
   test(`${path}: 未ログインでは外部通信をせず拒否する`, async () => {
     request.path = path;
     request.method = path === '/api/session' ? 'GET' : 'POST';
-    request.get = () => '';
-    await cloudGlance(request, response);
+    delete request.headers.Authorization;
+    await sendRequest();
     assert.equal(response.statusCode, 401);
     assert.equal(global.fetch.mock.callCount(), 0);
-    assert.equal(response.headers['Cache-Control'], 'no-store');
+    assert.equal(response.headers['cache-control'], 'no-store');
   });
   test(`${path}: allowlist外のGoogle利用者を拒否する`, async () => {
     request.path = path;
     request.method = path === '/api/session' ? 'GET' : 'POST';
     identity.email = 'outsider@example.invalid';
-    await cloudGlance(request, response);
+    await sendRequest();
     assert.equal(response.statusCode, 403);
     assert.equal(global.fetch.mock.callCount(), 0);
   });
@@ -62,7 +71,7 @@ for (const rejectedIdentity of [
 ]) {
   test(`メール未取得・未検証・Google以外の認証を拒否: ${JSON.stringify(rejectedIdentity)}`, async () => {
     identity = rejectedIdentity;
-    await cloudGlance(request, response);
+    await sendRequest();
     assert.equal(response.statusCode, 403);
     assert.equal(global.fetch.mock.callCount(), 0);
   });
@@ -70,7 +79,7 @@ for (const rejectedIdentity of [
 
 test('期限切れ・失効したIDトークンを拒否し、詳細を公開しない', async () => {
   getAuth().verifyIdToken.mock.mockImplementation(async () => { throw new Error('fictional-private-detail'); });
-  await cloudGlance(request, response);
+  await sendRequest();
   assert.equal(response.statusCode, 401);
   assert.ok(!JSON.stringify(response.body).includes('fictional-private-detail'));
   assert.deepEqual(getAuth().verifyIdToken.mock.calls[0].arguments, ['fictional-token', true]);
@@ -78,17 +87,17 @@ test('期限切れ・失効したIDトークンを拒否し、詳細を公開し
 
 test('許可確認はメールを正規化し、allowlist変更も次の要求で反映する', async () => {
   request.path = '/api/session'; request.method = 'GET';
-  await cloudGlance(request, response);
+  await sendRequest();
   assert.deepEqual(response.body, { isAuthorized: true });
   process.env.HOME_GOOGLE_ACCOUNT = '';
-  await cloudGlance(request, response);
+  await sendRequest();
   assert.equal(response.statusCode, 403);
 });
 
 for (const question of ['', ' ', 'a'.repeat(4001), { value: '質問' }]) {
   test(`不正な質問を送信せず拒否: ${typeof question}/${String(question).length}`, async () => {
     request.body.question = question;
-    await cloudGlance(request, response);
+    await sendRequest();
     assert.equal(response.statusCode, 400);
     assert.equal(global.fetch.mock.callCount(), 0);
   });
@@ -106,7 +115,7 @@ test('Responses要求と日本時間・地域コンテキストを維持し、�
       ] }
     ] }
   ] }) }));
-  await cloudGlance(request, response);
+  await sendRequest();
   assert.equal(response.statusCode, 200);
   assert.deepEqual(response.body, { answer: '😀説明出典です', citations: [
     { url: 'https://example.invalid/source', title: '架空の出典', startIndex: 3, endIndex: 5 }
@@ -140,7 +149,7 @@ for (const kind of ['network', 'http', 'json', 'empty', 'malformed']) {
         return kind === 'malformed' ? { output: 'fictional-private-detail' } : { output: [] };
       } };
     });
-    await cloudGlance(request, response);
+    await sendRequest();
     assert.equal(response.statusCode, 502);
     assert.ok(!JSON.stringify(response.body).includes('fictional-private-detail'));
   });
@@ -154,7 +163,7 @@ test('Slack共有はMarkdownを維持し、安全な出典を重複排除して1
     { url: 'https://example.invalid/0', title: '重複' }
   ] };
   global.fetch.mock.mockImplementation(async () => ({ ok: true }));
-  await cloudGlance(request, response);
+  await sendRequest();
   assert.equal(response.statusCode, 200);
   assert.equal(global.fetch.mock.callCount(), 1);
   const [url, options] = global.fetch.mock.calls[0].arguments;
@@ -173,7 +182,7 @@ test('Slack共有はMarkdownを維持し、安全な出典を重複排除して1
 
 test('Slackの合計12,000文字超過は通信前に拒否する', async () => {
   request.path = '/api/share'; request.body.answer = 'a'.repeat(12000);
-  await cloudGlance(request, response);
+  await sendRequest();
   assert.equal(response.statusCode, 502);
   assert.match(response.body.error, /12,000/);
   assert.equal(global.fetch.mock.callCount(), 0);
@@ -188,7 +197,7 @@ for (const kind of ['network', 'http', 'settings', 'webhook']) {
       if (kind === 'network') throw new Error('fictional-private-detail');
       return { ok: false };
     });
-    await cloudGlance(request, response);
+    await sendRequest();
     assert.equal(response.statusCode, 502);
     assert.ok(!JSON.stringify(response.body).includes('fictional-private-detail'));
   });
@@ -199,7 +208,7 @@ for (const settings of ['null', '[]', '"fictional-private-detail"', '42', 'true'
   test(`Slack JSON Secretの不正な形式・許可外キー・非文字列を拒否する: ${settings}`, async () => {
     request.path = '/api/share'; request.body.answer = '架空の回答';
     process.env.SLACK_POST_SETTINGS = settings;
-    await cloudGlance(request, response);
+    await sendRequest();
     assert.equal(response.statusCode, 502);
     assert.equal(global.fetch.mock.callCount(), 0);
     assert.ok(!JSON.stringify(response.body).includes('fictional-private-detail'));
@@ -210,7 +219,7 @@ test('空のSlack JSON設定はWebhook側の設定で共有できる', async () 
   request.path = '/api/share'; request.body.answer = '架空の回答';
   process.env.SLACK_POST_SETTINGS = '{}';
   global.fetch.mock.mockImplementation(async () => ({ ok: true }));
-  await cloudGlance(request, response);
+  await sendRequest();
   assert.equal(response.statusCode, 200);
   const body = JSON.parse(global.fetch.mock.calls[0].arguments[1].body);
   assert.equal(body.channel, undefined);
@@ -221,7 +230,7 @@ test('空のSlack JSON設定はWebhook側の設定で共有できる', async () 
 test('Slack JSON Secretの未設定も詳細を公開せず拒否する', async () => {
   request.path = '/api/share'; request.body.answer = '架空の回答';
   delete process.env.SLACK_POST_SETTINGS;
-  await cloudGlance(request, response);
+  await sendRequest();
   assert.equal(response.statusCode, 502);
   assert.equal(global.fetch.mock.callCount(), 0);
   assert.ok(!JSON.stringify(response.body).includes('SLACK_POST_SETTINGS'));
@@ -229,12 +238,55 @@ test('Slack JSON Secretの未設定も詳細を公開せず拒否する', async 
 
 test('不明なパス・HTTPメソッド・形式・過大な要求を拒否する', async () => {
   request.path = '/api/unknown';
-  await cloudGlance(request, response); assert.equal(response.statusCode, 404);
+  await sendRequest(); assert.equal(response.statusCode, 404);
   request.path = '/api/ask'; request.method = 'GET';
-  await cloudGlance(request, response); assert.equal(response.statusCode, 405);
-  request.method = 'POST'; request.is = () => false;
-  await cloudGlance(request, response); assert.equal(response.statusCode, 415);
-  request.rawBody = Buffer.alloc(128 * 1024 + 1);
-  await cloudGlance(request, response); assert.equal(response.statusCode, 413);
+  await sendRequest(); assert.equal(response.statusCode, 405);
+  request.method = 'POST'; request.headers['Content-Type'] = 'text/plain';
+  await sendRequest(); assert.equal(response.statusCode, 415);
+  request.headers['Content-Type'] = 'application/json';
+  request.body = { question: 'a'.repeat(128 * 1024 + 1) };
+  await sendRequest(); assert.equal(response.statusCode, 413);
   assert.equal(global.fetch.mock.callCount(), 0);
 });
+
+
+for (const [path, method, statusCode] of [
+  ['/api/session', 'HEAD', 405], ['/api/session', 'POST', 405],
+  ['/api/ask', 'HEAD', 405], ['/api/ask', 'OPTIONS', 405],
+  ['/api/share', 'GET', 405], ['/api/share', 'OPTIONS', 405],
+  ['/API/session', 'GET', 404], ['/api/Session', 'GET', 404],
+  ['/api/session/', 'GET', 404], ['/api/ask/', 'POST', 404]
+]) {
+  test(`Expressへ移行してもパスとメソッドの拒否を維持: ${method} ${path}`, async () => {
+    request.path = path;
+    request.method = method;
+    await sendRequest();
+    assert.equal(response.statusCode, statusCode);
+    assert.equal(response.headers['cache-control'], 'no-store');
+    assert.equal(getAuth().verifyIdToken.mock.callCount(), 0);
+    assert.equal(global.fetch.mock.callCount(), 0);
+  });
+}
+
+// アプリのfetchは外部通信の置換に使うため、検証要求はNode標準のHTTPで送る。
+async function sendRequest() {
+  response = await new Promise((resolve, reject) => {
+    const body = JSON.stringify(request.body);
+    const outgoing = http.request({
+      hostname: '127.0.0.1', port: server.address().port,
+      path: request.path, method: request.method,
+      headers: { ...request.headers, 'Content-Length': Buffer.byteLength(body) }
+    }, incoming => {
+      let body = '';
+      incoming.setEncoding('utf8');
+      incoming.on('data', chunk => { body += chunk; });
+      incoming.on('error', reject);
+      incoming.on('end', () => resolve({
+        statusCode: incoming.statusCode, headers: incoming.headers,
+        body: body ? JSON.parse(body) : undefined
+      }));
+    });
+    outgoing.on('error', reject);
+    outgoing.end(body);
+  });
+}

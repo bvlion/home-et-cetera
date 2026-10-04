@@ -34,11 +34,10 @@ jobs:
           cache-dependency-path: |
             cloud-glance/package-lock.json
             cloud-glance/functions/package-lock.json
-      - run: npm ci
+      - name: Verify cloud-glance
         if: steps.filter.outputs.should-verify-cloud-glance == 'true'
-      - run: npm --prefix functions ci
-        if: steps.filter.outputs.should-verify-cloud-glance == 'true'
-      - run: npm run check
-        if: steps.filter.outputs.should-verify-cloud-glance == 'true'
-      - run: npm run test:emulators
-        if: steps.filter.outputs.should-verify-cloud-glance == 'true'
+        run: |
+          npm ci
+          npm --prefix functions ci
+          npm run check
+          npm run test:emulators
