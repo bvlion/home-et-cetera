@@ -1,13 +1,2 @@
-# 旧ルート配置に残る実設定・依存関係・ダンプも引き続き保護する。
-# cadence-xsの除外設定はcadence-xs/.gitignoreで管理する。
-/vendor/
-/.phpunit.cache/
-/.phpunit.result.cache
-/composer.phar
-/.env
-/.env.*
-!/.env.example
-/database/dumps/
-
-# cloud-glanceのGitHub Actions認証で一時生成する認証ファイル。
+# google-github-actions/auth が GitHub Actions 実行中に生成する認証ファイル。
 /gha-creds-*.json
