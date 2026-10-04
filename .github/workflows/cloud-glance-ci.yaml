@@ -26,7 +26,7 @@ jobs:
               - 'cloud-glance/**'
               - '.github/workflows/cloud-glance-ci.yaml'
               - '.github/workflows/cloud-glance-deploy.yaml'
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: steps.filter.outputs.should-verify-cloud-glance == 'true'
         with:
           node-version: '22'
