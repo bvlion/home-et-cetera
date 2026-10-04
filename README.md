@@ -24,7 +24,7 @@
 | `.github/workflows/cadence-xs-ci.yaml`、`.github/workflows/cadence-xs-deploy.yaml` | cadence-xsの検証・本番デプロイ |
 | `cloud-glance/` | Firebase Hosting / Cloud Functions / Authenticationの単発質問サービス。説明・作業ルール・検証を個別管理 |
 | `.github/workflows/cloud-glance-ci.yaml`、`.github/workflows/cloud-glance-deploy.yaml` | cloud-glance専用の検証と `cloud-glance-v*` タグによるデプロイ |
-| `.github/dependabot.yml` | cadence-xsのComposer依存関係とGitHub Actionsの更新設定 |
+| `.github/dependabot.yml` | cadence-xsのComposer依存関係、cloud-glanceのnpm依存関係、GitHub Actionsの更新設定 |
 
 開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`cadence-xs-v*`タグによる本番デプロイでは、対象タグの`cadence-xs/`だけを更新します。
 
