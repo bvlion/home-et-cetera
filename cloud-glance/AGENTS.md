@@ -1,6 +1,6 @@
 # cloud-glance の作業ルール
 
-ルートの[AGENTS.md](../AGENTS.md)と併せて、このディレクトリと `.github/workflows/cloud-glance-ci.yaml`、`.github/workflows/cloud-glance-deploy.yaml` に適用します。
+ルートの[AGENTS.md](../AGENTS.md)と併せて、このディレクトリ、`.github/workflows/cloud-glance-ci.yaml`、`.github/workflows/cloud-glance-deploy.yaml`、`.github/dependabot.yml` の cloud-glance 用 npm 設定に適用します。
 
 - 仕様の正は [Issue #88](https://github.com/bvlion/home-et-cetera/issues/88) の確定要件です。移行元の確認には `bvlion/gas/QuickAsk` の最新 `master` を使用し、確認コミットを記録します。
 - Firebaseプロジェクトは専用の `b-glance`、本番URLは `https://b-glance.web.app` です。他サービスとプロジェクト・実行基盤・デプロイを共用しません。
