@@ -27,6 +27,7 @@ cloud-glanceに関する作業では、必ず[専用AGENTS.md](cloud-glance/AGEN
 専用ルールは`cloud-glance/`配下の実装・設定・検証・関連文書と、次のリポジトリ共通配置にあるcloud-glance用の設定に適用します。
 
 - `.github/workflows/cloud-glance-ci.yaml`、`.github/workflows/cloud-glance-deploy.yaml`
+- `.github/dependabot.yml` の cloud-glance 用 npm 設定
 
 他サービスのディレクトリや、そのサービス専用の設定・検証・デプロイにはcloud-glance専用ルールを適用しません。サービスごとのAGENTS.mdを参照してください。
 
