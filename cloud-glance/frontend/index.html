@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>cloud-glance</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header>
+      <span class="app-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2ZM6 7h12v2H6Zm0 4h8v2H6Z"/></svg>
+      </span>
+      <h1>cloud-glance</h1>
+      <button id="clear" type="button" disabled aria-label="質問と回答をクリア">クリア</button>
+    </header>
+    <main>
+      <button id="login" type="button" disabled>Googleでログイン</button>
+      <form id="askForm" hidden>
+        <div class="question-field">
+          <label for="question">質問</label>
+          <textarea id="question" maxlength="4000" required autofocus></textarea>
+        </div>
+        <button id="ask" type="submit">
+          聞く
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 4-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8Z"/></svg>
+        </button>
+      </form>
+      <p id="status" role="status" aria-live="polite"></p>
+      <p id="error" role="alert"></p>
+      <section id="answerPanel" aria-labelledby="answerHeading" hidden>
+        <h2 id="answerHeading">回答</h2>
+        <div id="answer"></div>
+        <ul id="citations"></ul>
+        <button id="share" type="button" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 16a3 3 0 0 0-2.39 1.19l-6.7-3.91a3.2 3.2 0 0 0 0-2.56l6.7-3.91A3 3 0 1 0 15 5c0 .21.02.42.06.62L8.35 9.54a3 3 0 1 0 0 4.92l6.71 3.92A3 3 0 1 0 18 16Z"/></svg>
+          Slackに共有
+        </button>
+        <p id="shareStatus" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

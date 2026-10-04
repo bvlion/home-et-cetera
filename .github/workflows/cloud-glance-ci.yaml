@@ -1,0 +1,43 @@
+name: cloud-glance CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  cloud-glance-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloud-glance
+    steps:
+      - uses: actions/checkout@v7
+      - name: Detect cloud-glance changes
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            should-verify-cloud-glance:
+              - 'cloud-glance/**'
+              - '.github/workflows/cloud-glance-ci.yaml'
+              - '.github/workflows/cloud-glance-deploy.yaml'
+      - uses: actions/setup-node@v6
+        if: steps.filter.outputs.should-verify-cloud-glance == 'true'
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            cloud-glance/package-lock.json
+            cloud-glance/functions/package-lock.json
+      - name: Verify cloud-glance
+        if: steps.filter.outputs.should-verify-cloud-glance == 'true'
+        run: |
+          npm ci
+          npm --prefix functions ci
+          npm run check
+          npm run test:emulators
