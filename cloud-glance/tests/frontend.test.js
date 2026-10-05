@@ -46,6 +46,11 @@ beforeEach(async () => {
 });
 afterEach(() => window.close());
 
+test('利用者向け名称をサクッとチャッピーで統一する', () => {
+  assert.equal(window.document.title, 'サクッとチャッピー');
+  assert.equal(window.document.querySelector('h1').textContent, 'サクッとチャッピー');
+});
+
 test('非表示の認証ボタンにはページ側のCSSでもdisplay:noneを適用する', () => {
   // jsdom 30.1.1はブラウザー既定とページ側のCSSの優先順位を区別しないため、
   // 計算済みスタイルだけでは今回のhidden上書きを検出できない。
