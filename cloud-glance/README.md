@@ -37,7 +37,7 @@ Hostingには60秒の要求上限があるため、関数は60秒、外部API通
 
 以下は利用者の管理アカウントで実施します。本番値・メールアドレス・認証ファイルをIssueやPRへ掲載しないでください。
 
-1. 専用プロジェクト `b-glance` をFirebaseへ登録し、Cloud Functionsに必要なBlazeプランの課金を有効にします。Firebase Hosting、Authentication、Cloud Functions、Cloud Run、Cloud Build、Artifact Registry、Secret ManagerのAPI・サービスと、必要なサービスエージェントを設定します。初回のFirebase CLIデプロイでは、必要なAPI・サービスエージェントの準備権限も必要です。
+1. 専用プロジェクト `b-glance` をFirebaseへ登録し、Cloud Functionsに必要なBlazeプランの課金を有効にします。現在固定している `firebase-tools 15.32.1` の初回デプロイでは、Firebase Hosting / Authentication の準備に加え、Cloud Functions、Cloud Run、Cloud Build、Artifact Registry、Eventarc、Pub/Sub、Cloud Storage、Secret Manager、Firebase Extensions、Cloud Billing の各API・サービスと、必要なサービスエージェントを設定します。Firebase CLIが初回デプロイ中にこれらの有効化状況とサービスエージェントを確認するため、管理アカウント側で事前に準備します。
 2. FirebaseコンソールでWebアプリを登録します。ブラウザーはHostingの[予約URL](https://firebase.google.com/docs/hosting/reserved-urls) `/__/firebase/init.json` からFirebaseの公開設定を取得するため、実際の設定値をリポジトリへ転記しません。
 3. Firebase AuthenticationのGoogleプロバイダーを有効化し、承認済みドメインへ `b-glance.web.app` を登録します。第三者ストレージ制限のあるスマートフォンでもログインできるよう、認証ドメインをHostingと同じホストへ設定しています。[Firebase公式手順](https://firebase.google.com/docs/auth/web/redirect-best-practices)に従い、Google OAuthクライアントの承認済みリダイレクトURIへ `https://b-glance.web.app/__/auth/handler` も登録します。
 4. Secret Manager APIを有効化し、次のSecretをすべて作成します。`cloud-glance/` から `npx firebase functions:secrets:set SECRET名 --project b-glance` を実行し、値は安全な入力で登録してください。実値をコマンド引数やファイルへ残さないでください。
@@ -65,7 +65,9 @@ Google Cloud側でデプロイ用サービスアカウントと[Workload Identit
 | `CLOUD_GLANCE_WORKLOAD_IDENTITY_PROVIDER` | 作成したWorkload Identity Providerの完全名 |
 | `CLOUD_GLANCE_DEPLOY_SERVICE_ACCOUNT` | デプロイ用サービスアカウント |
 
-デプロイ用サービスアカウントにはHosting・Functionsのデプロイ権限（`roles/firebasehosting.admin`、`roles/cloudfunctions.developer`）、Cloud Runの公開呼び出し設定に必要な `roles/run.admin`、プロジェクトのサービス利用権限（`roles/serviceusage.serviceUsageConsumer`）、実行・ビルドサービスアカウントへの `roles/iam.serviceAccountUser` を設定します。Secretの参照・バインドに必要な権限と、ビルドサービスアカウントのCloud Build / Artifact Registry権限も必要です。[FunctionsのIAM要件](https://cloud.google.com/functions/docs/reference/iam/roles)に沿って初回準備と継続デプロイを確認してください。API有効化やIAM付与は管理アカウントで行います。
+デプロイ用サービスアカウントには、Hosting のデプロイ用に `roles/firebasehosting.admin`、HTTP Functions の作成・更新とIAM設定用に `roles/cloudfunctions.admin`、Cloud Run の設定用に `roles/run.admin`、プロジェクトのサービス利用権限として `roles/serviceusage.serviceUsageConsumer`、Secret のメタデータ参照用に `roles/secretmanager.viewer`、Firebase CLI が Functions デプロイ時に行う既存 Extension 一覧確認用に `roles/firebase.viewer` を設定します。さらに、実行・ビルドサービスアカウントには必要な範囲で `roles/iam.serviceAccountUser` を設定し、ビルドサービスアカウントには Cloud Build / Artifact Registry で必要な権限を設定します。実行サービスアカウントの Secret payload 参照権限は前節の `roles/secretmanager.secretAccessor` を各 Secret に対して使用します。
+
+現在の `firebase-tools 15.32.1` は cloud-glance 側で Firebase Extensions を利用していなくても Functions デプロイ中に既存 Extension 一覧を確認します。この確認には `firebaseextensions.instances.list` が必要です。2026-10-05 時点の定義済み `roles/firebaseextensions.viewer`（Beta）にはこの権限が含まれないため、デプロイ用サービスアカウントでは `roles/firebase.viewer` を使用します。[FunctionsのIAM要件](https://cloud.google.com/functions/docs/reference/iam/roles)に沿って初回準備と継続デプロイを確認してください。API有効化やIAM付与は管理アカウントで行います。
 
 PR/mainのCIで検証済みのコミットを対象に、レビュー・マージ後、リリース対象コミットへ `cloud-glance-v*` タグを付けてpushします。`.github/workflows/cloud-glance-deploy.yaml` がデプロイに必要な依存関係の復元・ビルドを行い、`b-glance` のHostingと `functions:cloud-glance:cloudGlance` だけを反映します。本番への同時デプロイはcloud-glance専用のconcurrency groupで制限します。他サービスのデプロイは起動しません。
 
