@@ -60,13 +60,14 @@ test('非表示の認証ボタンにはページ側のCSSでもdisplay:noneを�
   }
 });
 
-test('初期HTMLでもCSS適用後にクリアを表示しない', () => {
+test('初期認証状態が確定するまではログインとクリアを表示しない', () => {
   const initialWindow = new JSDOM(html).window;
   initialWindow.document.head.appendChild(window.document.querySelector('style').cloneNode(true));
   try {
+    assert.equal(initialWindow.document.getElementById('login').hidden, true);
+    assert.equal(initialWindow.document.getElementById('clear').hidden, true);
+    assert.equal(initialWindow.getComputedStyle(initialWindow.document.getElementById('login')).display, 'none');
     assert.equal(initialWindow.getComputedStyle(initialWindow.document.getElementById('clear')).display, 'none');
-    assert.equal(initialWindow.getComputedStyle(initialWindow.document.getElementById('login')).display, 'inline-flex');
-    assert.equal(initialWindow.document.getElementById('login').disabled, true);
   } finally {
     initialWindow.close();
   }
