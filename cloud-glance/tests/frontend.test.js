@@ -42,6 +42,19 @@ beforeEach(async () => {
 });
 afterEach(() => window.close());
 
+
+test('未ログインではGoogleログインだけを表示する', async () => {
+  auth.currentUser = null;
+  await authListener(null);
+  assert.equal(window.document.getElementById('login').hidden, false);
+  assert.equal(window.document.getElementById('clear').hidden, true);
+});
+
+test('利用可能状態ではクリアだけを表示する', () => {
+  assert.equal(window.document.getElementById('login').hidden, true);
+  assert.equal(window.document.getElementById('clear').hidden, false);
+});
+
 test('回答取得時点の質問を共有し、編集した質問とは組み替えない', async () => {
   window.document.getElementById('question').value = '回答取得時の架空の質問';
   window.document.getElementById('askForm').dispatchEvent(new window.Event('submit', { cancelable: true }));
