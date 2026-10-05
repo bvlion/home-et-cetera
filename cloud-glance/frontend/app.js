@@ -223,7 +223,7 @@ try {
     statusMessage.textContent = '';
     shareStatusMessage.textContent = '';
     errorMessage.textContent = '';
-    loginButton.hidden = !user ? false : true;
+    loginButton.hidden = Boolean(user);
     clearButton.hidden = true;
     loginButton.disabled = false;
     if (!user) return;
