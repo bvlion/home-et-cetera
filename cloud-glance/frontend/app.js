@@ -223,7 +223,8 @@ try {
     statusMessage.textContent = '';
     shareStatusMessage.textContent = '';
     errorMessage.textContent = '';
-    loginButton.hidden = false;
+    loginButton.hidden = Boolean(user);
+    clearButton.hidden = true;
     loginButton.disabled = false;
     if (!user) return;
     loginButton.disabled = true;
@@ -236,6 +237,7 @@ try {
       if (auth.currentUser !== user) return;
       isAuthorized = true;
       loginButton.hidden = true;
+      clearButton.hidden = false;
       askForm.hidden = false;
       askButton.disabled = false;
       clearButton.disabled = false;
@@ -243,6 +245,7 @@ try {
     } catch (error) {
       if (auth.currentUser !== user) return;
       errorMessage.textContent = error.message || 'ログインを確認できませんでした。';
+      loginButton.hidden = false;
     } finally {
       if (auth.currentUser === user) loginButton.disabled = false;
     }

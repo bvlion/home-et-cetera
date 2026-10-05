@@ -30,6 +30,7 @@ svg { width: 1.25rem; height: 1.25rem; fill: currentColor; flex-shrink: 0; }
 h1 { margin: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: -.02em; }
 #clear { margin-left: auto; padding: .75rem; border-color: transparent; background: transparent; color: #00776f; }
 #clear:disabled { color: #59645f; }
+#login[hidden], #clear[hidden] { display: none; }
 .question-field { position: relative; }
 label {
   position: absolute;
