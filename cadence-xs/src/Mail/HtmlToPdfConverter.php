@@ -112,6 +112,26 @@ final class HtmlToPdfConverter
         ?ClientInterface $httpClient = null,
         ?callable $hostResolver = null,
     ): string {
+        $writeImageFailure = static function (
+            string $source,
+            string $failureReason,
+        ): void {
+            $message = json_encode(
+                [
+                    'event' => 'pdf_image_failed',
+                    'src' => $source,
+                    'failure_reason' => $failureReason,
+                ],
+                JSON_UNESCAPED_SLASHES
+                    | JSON_UNESCAPED_UNICODE
+                    | JSON_INVALID_UTF8_SUBSTITUTE,
+            );
+
+            if (is_string($message)) {
+                error_log($message);
+            }
+        };
+
         if (strlen($html) > self::MAX_HTML_BYTES) {
             throw new RuntimeException(
                 'HTML body exceeds the maximum size allowed for PDF '
@@ -313,6 +333,7 @@ final class HtmlToPdfConverter
                 }
 
                 $dataUri = null;
+                $failureReason = null;
                 $resourceKey = $source;
                 $lowerSource = strtolower($source);
 
@@ -325,6 +346,10 @@ final class HtmlToPdfConverter
 
                     if (array_key_exists($resourceKey, $resolvedImages)) {
                         $dataUri = $resolvedImages[$resourceKey];
+
+                        if (!is_string($dataUri)) {
+                            $failureReason = 'cached_failure';
+                        }
                     } else {
                         $inlineImage = $inlineImages[$contentId] ?? null;
                         $contentType = is_array($inlineImage)
@@ -359,6 +384,30 @@ final class HtmlToPdfConverter
                         }
 
                         $resolvedImages[$resourceKey] = $dataUri;
+
+                        if (!is_string($dataUri)) {
+                            if (!is_string($content)) {
+                                $failureReason = 'inline_image_not_found';
+                            } elseif (
+                                !is_string($contentType)
+                                || !in_array(
+                                    $contentType,
+                                    $allowedContentTypes,
+                                    true,
+                                )
+                            ) {
+                                $failureReason = 'unsupported_declared_content_type';
+                            } elseif (strlen($content) > self::MAX_IMAGE_BYTES) {
+                                $failureReason = 'image_size_limit';
+                            } elseif (
+                                $totalImageBytes + strlen($content)
+                                > self::MAX_TOTAL_IMAGE_BYTES
+                            ) {
+                                $failureReason = 'total_image_size_limit';
+                            } elseif ($actualContentType !== $contentType) {
+                                $failureReason = 'declared_actual_mime_mismatch';
+                            }
+                        }
                     }
                 } elseif (
                     str_starts_with($lowerSource, 'http://')
@@ -366,6 +415,10 @@ final class HtmlToPdfConverter
                 ) {
                     if (array_key_exists($resourceKey, $resolvedImages)) {
                         $dataUri = $resolvedImages[$resourceKey];
+
+                        if (!is_string($dataUri)) {
+                            $failureReason = 'cached_failure';
+                        }
                     } else {
                         $currentUrl = $source;
                         $deadline = microtime(true)
@@ -394,6 +447,7 @@ final class HtmlToPdfConverter
                                     || $resolvedHost === ''
                                     || $currentUri->getUserInfo() !== ''
                                 ) {
+                                    $failureReason = 'invalid_url';
                                     break;
                                 }
 
@@ -403,6 +457,7 @@ final class HtmlToPdfConverter
                                     : ($scheme === 'https' ? 443 : 80);
 
                                 if ($port < 1 || $port > 65535) {
+                                    $failureReason = 'invalid_port';
                                     break;
                                 }
 
@@ -444,10 +499,12 @@ final class HtmlToPdfConverter
                                         }
                                     }
                                 } else {
+                                    $failureReason = 'invalid_host';
                                     break;
                                 }
 
                                 if (!is_array($addresses)) {
+                                    $failureReason = 'dns_resolution_failed';
                                     break;
                                 }
 
@@ -525,6 +582,7 @@ final class HtmlToPdfConverter
                                 }
 
                                 if (!$isPublicAddressSet) {
+                                    $failureReason = 'non_public_address';
                                     break;
                                 }
 
@@ -532,6 +590,7 @@ final class HtmlToPdfConverter
                                     - microtime(true);
 
                                 if ($remainingSeconds <= 0) {
+                                    $failureReason = 'timeout';
                                     break;
                                 }
 
@@ -542,6 +601,7 @@ final class HtmlToPdfConverter
                                 );
 
                                 if ($maximumReadableBytes <= 0) {
+                                    $failureReason = 'total_image_size_limit';
                                     break;
                                 }
 
@@ -608,6 +668,10 @@ final class HtmlToPdfConverter
                                 $statusCode = $response->getStatusCode();
 
                                 if ($isSizeLimitExceeded) {
+                                    $failureReason = $maximumReadableBytes
+                                        < self::MAX_IMAGE_BYTES
+                                        ? 'total_image_size_limit'
+                                        : 'image_size_limit';
                                     break;
                                 }
 
@@ -627,6 +691,9 @@ final class HtmlToPdfConverter
                                         || $redirectCount
                                             >= self::MAX_IMAGE_REDIRECTS
                                     ) {
+                                        $failureReason = $location === ''
+                                            ? 'missing_redirect_location'
+                                            : 'redirect_limit';
                                         break;
                                     }
 
@@ -639,6 +706,7 @@ final class HtmlToPdfConverter
                                 }
 
                                 if ($statusCode !== 200) {
+                                    $failureReason = 'http_status';
                                     break;
                                 }
 
@@ -655,6 +723,7 @@ final class HtmlToPdfConverter
                                         true,
                                     )
                                 ) {
+                                    $failureReason = 'unsupported_content_type';
                                     break;
                                 }
 
@@ -672,6 +741,7 @@ final class HtmlToPdfConverter
                                             > $maximumReadableBytes
                                     )
                                 ) {
+                                    $failureReason = 'image_size_limit';
                                     break;
                                 }
 
@@ -710,6 +780,9 @@ final class HtmlToPdfConverter
                                 ) ? ($imageInformation['mime'] ?? null) : null;
 
                                 if ($actualContentType !== $contentType) {
+                                    $failureReason = $isComplete
+                                        ? 'declared_actual_mime_mismatch'
+                                        : 'image_size_limit';
                                     break;
                                 }
 
@@ -720,6 +793,11 @@ final class HtmlToPdfConverter
                             }
                         } catch (Throwable) {
                             $dataUri = null;
+                            $failureReason = $isSizeLimitExceeded
+                                ? ($maximumReadableBytes < self::MAX_IMAGE_BYTES
+                                    ? 'total_image_size_limit'
+                                    : 'image_size_limit')
+                                : 'exception';
                         }
 
                         $resolvedImages[$resourceKey] = $dataUri;
@@ -732,6 +810,10 @@ final class HtmlToPdfConverter
                         || str_starts_with($lowerSource, 'http://')
                         || str_starts_with($lowerSource, 'https://')
                     ) {
+                        $writeImageFailure(
+                            $source,
+                            $failureReason ?? 'unknown',
+                        );
                         $alternativeText = $image->getAttribute('alt');
 
                         if ($alternativeText !== '') {
@@ -762,6 +844,17 @@ final class HtmlToPdfConverter
                     || strlen($convertedHtml) > self::MAX_HTML_BYTES
                 ) {
                     $image->setAttribute('src', $originalSource);
+
+                    if (
+                        str_starts_with($lowerSource, 'cid:')
+                        || str_starts_with($lowerSource, 'http://')
+                        || str_starts_with($lowerSource, 'https://')
+                    ) {
+                        $writeImageFailure(
+                            $source,
+                            'data_uri_html_size_limit',
+                        );
+                    }
 
                     $alternativeText = $image->getAttribute('alt');
 
