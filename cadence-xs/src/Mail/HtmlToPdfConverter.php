@@ -105,23 +105,23 @@ final class HtmlToPdfConverter
      * @param array<string, array{content_type: string, content: string}>
      *        $inlineImages Content-IDをキーとするinline画像です。
      * @param callable(string): list<string>|null $hostResolver
-     * @param array<string, int|string|null> $mailLogContext
-     *        メール単位でPDF変換を追跡するためのログ情報です。
      */
     public function convert(
         string $html,
         array $inlineImages = [],
         ?ClientInterface $httpClient = null,
         ?callable $hostResolver = null,
-        array $mailLogContext = [],
     ): string {
-        $writeLog = static function (array $entry) use ($mailLogContext): void {
-            if ($mailLogContext === []) {
-                return;
-            }
-
+        $writeImageFailure = static function (
+            string $source,
+            string $failureReason,
+        ): void {
             $message = json_encode(
-                $mailLogContext + $entry,
+                [
+                    'event' => 'pdf_image_failed',
+                    'src' => $source,
+                    'failure_reason' => $failureReason,
+                ],
                 JSON_UNESCAPED_SLASHES
                     | JSON_UNESCAPED_UNICODE
                     | JSON_INVALID_UTF8_SUBSTITUTE,
@@ -132,17 +132,7 @@ final class HtmlToPdfConverter
             }
         };
 
-        $writeLog([
-            'event' => 'pdf_conversion_started',
-            'html_bytes' => strlen($html),
-        ]);
-
         if (strlen($html) > self::MAX_HTML_BYTES) {
-            $writeLog([
-                'event' => 'pdf_conversion_failed',
-                'failure_reason' => 'html_size_limit',
-            ]);
-
             throw new RuntimeException(
                 'HTML body exceeds the maximum size allowed for PDF '
                     . 'conversion.',
@@ -169,11 +159,6 @@ final class HtmlToPdfConverter
         }
 
         if ($isLoaded) {
-            $writeLog([
-                'event' => 'pdf_image_processing_started',
-                'image_count' => $document->getElementsByTagName('img')->length,
-            ]);
-
             foreach (iterator_to_array($document->childNodes) as $childNode) {
                 if ($childNode->nodeType === XML_PI_NODE) {
                     $document->removeChild($childNode);
@@ -324,11 +309,6 @@ final class HtmlToPdfConverter
                 !is_string($convertedHtml)
                 || strlen($convertedHtml) > self::MAX_HTML_BYTES
             ) {
-                $writeLog([
-                    'event' => 'pdf_conversion_failed',
-                    'failure_reason' => 'html_size_limit',
-                ]);
-
                 throw new RuntimeException(
                     'HTML body exceeds the maximum size allowed for PDF '
                         . 'conversion.',
@@ -340,31 +320,20 @@ final class HtmlToPdfConverter
             /** @var array<string, string|null> $resolvedImages */
             $resolvedImages = [];
             $totalImageBytes = 0;
-            $imageIndex = 0;
 
             foreach (iterator_to_array($document->getElementsByTagName('img')) as $image) {
                 if (!$image instanceof DOMElement) {
                     continue;
                 }
 
-                $imageIndex++;
-
                 $source = trim($image->getAttribute('src'));
 
                 if ($source === '') {
-                    $writeLog([
-                        'event' => 'pdf_image_processed',
-                        'image_index' => $imageIndex,
-                        'source_type' => 'empty',
-                        'result' => 'failed',
-                        'failure_reason' => 'empty_source',
-                    ]);
-
                     continue;
                 }
 
                 $dataUri = null;
-                $imageLogEntry = null;
+                $failureReason = null;
                 $resourceKey = $source;
                 $lowerSource = strtolower($source);
 
@@ -377,15 +346,10 @@ final class HtmlToPdfConverter
 
                     if (array_key_exists($resourceKey, $resolvedImages)) {
                         $dataUri = $resolvedImages[$resourceKey];
-                        $imageLogEntry = [
-                            'event' => 'pdf_image_processed',
-                            'image_index' => $imageIndex,
-                            'src' => $source,
-                            'source_type' => 'cid',
-                            'result' => is_string($dataUri)
-                                ? 'embedded_from_cache'
-                                : 'failed_from_cache',
-                        ];
+
+                        if (!is_string($dataUri)) {
+                            $failureReason = 'cached_failure';
+                        }
                     } else {
                         $inlineImage = $inlineImages[$contentId] ?? null;
                         $contentType = is_array($inlineImage)
@@ -420,7 +384,6 @@ final class HtmlToPdfConverter
                         }
 
                         $resolvedImages[$resourceKey] = $dataUri;
-                        $failureReason = null;
 
                         if (!is_string($dataUri)) {
                             if (!is_string($content)) {
@@ -445,21 +408,6 @@ final class HtmlToPdfConverter
                                 $failureReason = 'declared_actual_mime_mismatch';
                             }
                         }
-
-                        $imageLogEntry = [
-                            'event' => 'pdf_image_processed',
-                            'image_index' => $imageIndex,
-                            'src' => $source,
-                            'source_type' => 'cid',
-                            'content_id' => $contentId,
-                            'declared_content_type' => $contentType,
-                            'actual_content_type' => $actualContentType,
-                            'bytes' => is_string($content) ? strlen($content) : null,
-                            'result' => is_string($dataUri)
-                                ? 'embedded'
-                                : 'failed',
-                            'failure_reason' => $failureReason,
-                        ];
                     }
                 } elseif (
                     str_starts_with($lowerSource, 'http://')
@@ -467,27 +415,17 @@ final class HtmlToPdfConverter
                 ) {
                     if (array_key_exists($resourceKey, $resolvedImages)) {
                         $dataUri = $resolvedImages[$resourceKey];
-                        $imageLogEntry = [
-                            'event' => 'pdf_image_processed',
-                            'image_index' => $imageIndex,
-                            'src' => $source,
-                            'source_type' => 'http',
-                            'result' => is_string($dataUri)
-                                ? 'embedded_from_cache'
-                                : 'failed_from_cache',
-                        ];
+
+                        if (!is_string($dataUri)) {
+                            $failureReason = 'cached_failure';
+                        }
                     } else {
                         $currentUrl = $source;
                         $deadline = microtime(true)
                             + self::IMAGE_TIMEOUT_SECONDS;
                         $redirectCount = 0;
-                        $failureReason = null;
-                        $exception = null;
                         $addresses = [];
-                        $actualContentType = null;
-                        $fetchedBytes = null;
                         $maximumReadableBytes = 0;
-                        $receivedBytes = 0;
                         $isSizeLimitExceeded = false;
                         $httpClient ??= new Client();
 
@@ -706,12 +644,9 @@ final class HtmlToPdfConverter
                                             $downloadTotal,
                                             $downloaded,
                                         ) use (
-                                            &$receivedBytes,
                                             &$isSizeLimitExceeded,
                                             $maximumReadableBytes,
                                         ): bool {
-                                            $receivedBytes = $downloaded;
-
                                             if ($downloaded > $maximumReadableBytes) {
                                                 $isSizeLimitExceeded = true;
 
@@ -731,31 +666,12 @@ final class HtmlToPdfConverter
                                     ],
                                 );
                                 $statusCode = $response->getStatusCode();
-                                $responseContentType = $response->getHeaderLine(
-                                    'Content-Type',
-                                );
-                                $responseContentLength = $response->getHeaderLine(
-                                    'Content-Length',
-                                );
-
-                                $writeLog([
-                                    'event' => 'pdf_image_response_received',
-                                    'image_index' => $imageIndex,
-                                    'src' => $source,
-                                    'source_type' => 'http',
-                                    'resolved_ips' => $addresses,
-                                    'request_url' => $currentUrl,
-                                    'status' => $statusCode,
-                                    'response_content_type' => $responseContentType,
-                                    'response_content_length' => $responseContentLength,
-                                ]);
 
                                 if ($isSizeLimitExceeded) {
                                     $failureReason = $maximumReadableBytes
                                         < self::MAX_IMAGE_BYTES
                                         ? 'total_image_size_limit'
                                         : 'image_size_limit';
-                                    $fetchedBytes = $receivedBytes;
                                     break;
                                 }
 
@@ -785,14 +701,6 @@ final class HtmlToPdfConverter
                                         new Uri($currentUrl),
                                         new Uri($location),
                                     );
-                                    $writeLog([
-                                        'event' => 'pdf_image_redirect',
-                                        'image_index' => $imageIndex,
-                                        'src' => $source,
-                                        'source_type' => 'http',
-                                        'redirect_url' => $currentUrl,
-                                        'status' => $statusCode,
-                                    ]);
                                     $redirectCount++;
                                     continue;
                                 }
@@ -870,7 +778,6 @@ final class HtmlToPdfConverter
                                 $actualContentType = is_array(
                                     $imageInformation,
                                 ) ? ($imageInformation['mime'] ?? null) : null;
-                                $fetchedBytes = strlen($content);
 
                                 if ($actualContentType !== $contentType) {
                                     $failureReason = $isComplete
@@ -884,55 +791,29 @@ final class HtmlToPdfConverter
                                 $totalImageBytes += strlen($content);
                                 break;
                             }
-                        } catch (Throwable $throwable) {
+                        } catch (Throwable) {
                             $dataUri = null;
                             $failureReason = $isSizeLimitExceeded
                                 ? ($maximumReadableBytes < self::MAX_IMAGE_BYTES
                                     ? 'total_image_size_limit'
                                     : 'image_size_limit')
                                 : 'exception';
-                            $fetchedBytes = $isSizeLimitExceeded
-                                ? $receivedBytes
-                                : null;
-                            $exception = $throwable;
                         }
 
                         $resolvedImages[$resourceKey] = $dataUri;
-                        $imageLogEntry = [
-                            'event' => 'pdf_image_processed',
-                            'image_index' => $imageIndex,
-                            'src' => $source,
-                            'source_type' => 'http',
-                            'request_url' => $currentUrl,
-                            'resolved_ips' => $addresses,
-                            'actual_content_type' => $actualContentType,
-                            'bytes' => $fetchedBytes,
-                            'result' => is_string($dataUri)
-                                ? 'embedded'
-                                : 'failed',
-                            'failure_reason' => $failureReason,
-                            'exception_class' => $exception !== null
-                                ? $exception::class
-                                : null,
-                            'exception_message' => $exception?->getMessage(),
-                        ];
                     }
-                } else {
-                    $isDataUri = str_starts_with($lowerSource, 'data:');
-
-                    $writeLog([
-                        'event' => 'pdf_image_processed',
-                        'image_index' => $imageIndex,
-                        'src' => $isDataUri ? null : $source,
-                        'source_type' => $isDataUri ? 'data' : 'other',
-                        'result' => 'not_processed',
-                    ]);
                 }
 
                 if (!is_string($dataUri)) {
-                    if (is_array($imageLogEntry)) {
-                        $writeLog($imageLogEntry);
-
+                    if (
+                        str_starts_with($lowerSource, 'cid:')
+                        || str_starts_with($lowerSource, 'http://')
+                        || str_starts_with($lowerSource, 'https://')
+                    ) {
+                        $writeImageFailure(
+                            $source,
+                            $failureReason ?? 'unknown',
+                        );
                         $alternativeText = $image->getAttribute('alt');
 
                         if ($alternativeText !== '') {
@@ -963,10 +844,16 @@ final class HtmlToPdfConverter
                     || strlen($convertedHtml) > self::MAX_HTML_BYTES
                 ) {
                     $image->setAttribute('src', $originalSource);
-                    if (is_array($imageLogEntry)) {
-                        $imageLogEntry['result'] = 'failed';
-                        $imageLogEntry['failure_reason'] = 'data_uri_html_size_limit';
-                        $writeLog($imageLogEntry);
+
+                    if (
+                        str_starts_with($lowerSource, 'cid:')
+                        || str_starts_with($lowerSource, 'http://')
+                        || str_starts_with($lowerSource, 'https://')
+                    ) {
+                        $writeImageFailure(
+                            $source,
+                            'data_uri_html_size_limit',
+                        );
                     }
 
                     $alternativeText = $image->getAttribute('alt');
@@ -990,10 +877,6 @@ final class HtmlToPdfConverter
                 }
 
                 $html = $convertedHtml;
-
-                if (is_array($imageLogEntry)) {
-                    $writeLog($imageLogEntry);
-                }
             }
         }
 
@@ -1016,30 +899,13 @@ final class HtmlToPdfConverter
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();
             $pdf = $dompdf->output();
-        } catch (Throwable $throwable) {
-            $writeLog([
-                'event' => 'pdf_conversion_failed',
-                'failure_reason' => 'dompdf_exception',
-                'exception_class' => $throwable::class,
-                'exception_message' => $throwable->getMessage(),
-            ]);
-
+        } catch (Throwable) {
             throw new RuntimeException('HTML to PDF conversion failed.');
         }
 
         if (!is_string($pdf) || $pdf === '') {
-            $writeLog([
-                'event' => 'pdf_conversion_failed',
-                'failure_reason' => 'empty_pdf',
-            ]);
-
             throw new RuntimeException('HTML to PDF conversion failed.');
         }
-
-        $writeLog([
-            'event' => 'pdf_conversion_completed',
-            'pdf_bytes' => strlen($pdf),
-        ]);
 
         return $pdf;
     }

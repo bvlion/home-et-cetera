@@ -155,11 +155,6 @@ final class MailProcessingService
             $pdf = $this->htmlToPdfConverter->convert(
                 $content['html_body'],
                 $content['inline_images'] ?? [],
-                mailLogContext: [
-                    'mail_uid' => $uid,
-                    'subject' => $content['subject'],
-                    'received_at' => $content['received_at']?->format(DATE_ATOM),
-                ],
             );
 
             return $this->slackClient->postPdfFile(
