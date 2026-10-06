@@ -201,7 +201,6 @@ PDF化・PDF投稿の詳細は次のとおりです。
 - 日本語本文を表示するため、`resources/fonts/IPAexGothic`に同梱したIPAexゴシック(TrueType、IPAフォントライセンスv1.0)をDompdfへ登録します。XServerにインストール済みのフォントには依存しません。CFFアウトラインを持つOpenType(`.otf`)フォントはDompdfでの埋め込みが不安定なため使用せず、TrueType(`.ttf`)フォントのみを同梱しています。
 - Dompdfはブラウザと異なり、指定フォントにグリフがない場合の自動フォールバックを行わないため、メール本文のHTML/CSSがどのような`font-family`を指定していても(`!important`や高い詳細度を伴う場合を含む)、必ずIPAexゴシックが選択されるようにしています。CSSへ上書きルールを注入して詳細度・`!important`で競う方式ではなく、Dompdf自身が解決しうる全フォント名(`sans-serif`・`serif`・`helvetica`・`times`等、`vendor/dompdf/dompdf/lib/fonts/installed-fonts.dist.json`が持つ既定の全ファミリー名)をIPAexゴシックへ登録し直すことで、メール側がどの名前を指定してもDompdfの解決結果がIPAexゴシック以外になり得ないようにしています。それ以外の未知のフォント名は、Dompdfの既定フォールバック(`Options::setDefaultFont()`、これもIPAexゴシックに設定)へ渡ります。
 - HTML本文・生成したPDFはメモリ上でのみ扱い、ディスクへの一時ファイル書き出し、ログへの出力、永続保存を行いません。
-- HTMLメールのPDF変換時には、PHPのエラーログへメールUID、件名、受信日時、HTMLサイズ、各画像のURLまたはContent-ID、名前解決結果、HTTP応答・リダイレクト、MIME判定、取得サイズ、処理結果、例外情報をJSON形式で記録します。これは画像取得失敗を調査するための運用ログであり、ログファイルをリポジトリへ配置・共有しません。
 - HTML本文の取得段階(`Bvlion\CadenceXs\Mail\MimeMessageDecoder`)とDompdfへ渡す直前(`Bvlion\CadenceXs\Mail\HtmlToPdfConverter::MAX_HTML_BYTES`、5,000,000バイト、約4.8MiB)の両方でサイズを制限します。Dompdfは入力HTMLサイズによって数倍〜十数倍のメモリを使用することがあり、実行環境のPHP `memory_limit`も未確認のため、5,000,000バイトという値はDompdfのレンダリングが安全であることを保証するものではなく、メモリ枯渇や実行時間超過のリスクを抑えるための運用上の上限です。
   - `MimeMessageDecoder`は、HTMLパートを`imap_fetchbody()`で取得する前にIMAPが宣言するパートサイズ(`part->bytes`、RFC 3501でtext系パートに必須の項目)を確認し、超過時は本文取得自体を行わずに失敗させます。取得後も、base64/quoted-printableのデコード前後、UTF-8への文字コード変換後の各段階でバイト数を確認します。転送エンコード状態(base64・quoted-printableでかさ増しされた状態)の上限は、base64の4/3倍やquoted-printableの再現しにくい増加を考慮し、最終的なUTF-8 HTMLの上限(5,000,000バイト)より大きい値(4倍)を用い、デコード後・変換後は最終上限(5,000,000バイト)で確認します。宣言サイズが取得できない場合は、無制限扱いにはせず失敗させます。
   - いずれの段階で上限を超えた場合も、HTMLを途中で切って不完全なPDFを生成することはせず、そのメール1件だけを本文・秘密情報を含まない`RuntimeException`で失敗させ、既読化・移動・完了記録を行わずに後続の対象メール処理を継続します。
@@ -496,13 +495,13 @@ SSH host key verificationは`DEPLOY_SSH_KNOWN_HOSTS`を使って必ず有効な�
 
 ### HTMLメールPDF変換のローカル確認
 
-保存したHTMLメールを既存の`HtmlToPdfConverter`へ直接渡して、PDFと画像処理ログを確認できます。
+保存したHTMLメールを既存の`HtmlToPdfConverter`へ直接渡して、PDFを確認できます。
 
 ```shell
 /opt/php-8.5.5/bin/php bin/convert-html-to-pdf.php <html-file> [pdf-file]
 ```
 
-`pdf-file`を省略すると、入力ファイル名へ`.pdf`を付加したパスへ出力します。外部画像の取得、取得失敗時のfallback、画像処理ログはメール処理時と同じ変換処理を使用します。出力先は標準出力に表示され、画像処理ログはPHPのエラーログで確認します。
+`pdf-file`を省略すると、入力ファイル名へ`.pdf`を付加したパスへ出力します。外部画像の取得、取得失敗時のfallbackはメール処理時と同じ変換処理を使用します。出力先は標準出力に表示されます。
 
 ### /healthに依存しない疎通確認
 
