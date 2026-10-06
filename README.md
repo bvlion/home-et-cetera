@@ -7,7 +7,7 @@
 | サービス | 管理状況 | 説明・関連Issue |
 | --- | --- | --- |
 | cadence-xs | 管理中。`cadence-xs/`に配置 | メール処理・記念日通知などを提供するXServer上のHTTP API。[専用README](cadence-xs/README.md) |
-| cloud-concierge | 今後統合予定 | [Issue #84](https://github.com/bvlion/home-et-cetera/issues/84)で扱います |
+| cloud-concierge | 管理中。`cloud-concierge/`に配置。本番切り替え条件は専用READMEを参照 | Firebase Functions / RTDBで家庭内操作を取り次ぐサービス。[専用README](cloud-concierge/README.md)、[Issue #84](https://github.com/bvlion/home-et-cetera/issues/84) |
 | pi-steward | 今後統合予定 | [Issue #85](https://github.com/bvlion/home-et-cetera/issues/85)で扱います |
 | cloud-glance | 管理中。`cloud-glance/`に配置。本番移行確認は専用READMEを参照 | Googleログイン付きの単発質問・任意のSlack共有。[専用README](cloud-glance/README.md)、[Issue #88](https://github.com/bvlion/home-et-cetera/issues/88) |
 
@@ -24,7 +24,9 @@
 | `.github/workflows/cadence-xs-ci.yaml`、`.github/workflows/cadence-xs-deploy.yaml` | cadence-xsの検証・本番デプロイ |
 | `cloud-glance/` | Firebase Hosting / Cloud Functions / Authenticationの単発質問サービス。説明・作業ルール・検証を個別管理 |
 | `.github/workflows/cloud-glance-ci.yaml`、`.github/workflows/cloud-glance-deploy.yaml` | cloud-glance専用の検証と `cloud-glance-v*` タグによるデプロイ |
-| `.github/dependabot.yml` | cadence-xsのComposer依存関係、cloud-glanceのnpm依存関係、GitHub Actionsの更新設定 |
+| `cloud-concierge/` | 家庭内操作を取り次ぐFirebase Functions / RTDBサービス。説明・作業ルール・検証を個別管理 |
+| `.github/workflows/cloud-concierge-ci.yaml`、`.github/workflows/cloud-concierge-deploy.yaml` | cloud-concierge専用の検証とmainへのpushによるgcloudデプロイ |
+| `.github/dependabot.yml` | cadence-xsのComposer依存関係、cloud-glance・cloud-conciergeのnpm依存関係、GitHub Actionsの更新設定 |
 
 開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`cadence-xs-v*`タグによる本番デプロイでは、対象タグの`cadence-xs/`だけを更新します。
 
@@ -52,6 +54,8 @@
 `cadence-xs CI`はcadence-xs専用のworkflowです。mainへのpushとすべてのPull Requestで`test`ジョブを起動し、`cadence-xs/`または`.github/workflows/cadence-xs-ci.yaml`に変更がある場合だけ既存の`make check`を実行します。ルートREADMEのみ・他サービスのみの変更では重い検証をスキップし、変更判定が成功すれば`test`も成功します。変更判定や検証の失敗はジョブの失敗となります。main rulesetの`Protect main`に設定済みのGitHub Actionsの必須チェック`test`と一致するため、管理設定の変更は不要です。他サービスのCIと必要な必須チェックは、そのサービスを統合するIssueで追加します。
 
 `cloud-glance CI`もmainへのpushとすべてのPull Requestで `cloud-glance-test` を起動します。cloud-glanceまたは専用workflowの変更時だけ検証し、関係しない変更では重い検証をスキップしてチェックを成功させます。Issue #88に従い、workflowのmainへのマージ後に `Protect main` の必須チェックへ `cloud-glance-test` を追加します。設定手順は[専用README](cloud-glance/README.md)を参照してください。
+
+`cloud-concierge CI`もmainへのpushとすべてのPull Requestで固定名 `cloud-concierge-test` を起動します。サービスまたは専用workflowの変更時だけ、移行元と同じNode.js 24・npm install・cache・lintを実行します。無関係な変更でも変更判定の成功でチェックを成功させます。Issue #84に従い、`Protect main` の必須チェックへ固定名 `cloud-concierge-test` を登録済みです。
 
 ## Publicリポジトリの運用
 

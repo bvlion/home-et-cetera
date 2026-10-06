@@ -1,0 +1,37 @@
+name: cloud-concierge deploy
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'cloud-concierge/**.js'
+      - 'cloud-concierge/**.json'
+      - '.github/workflows/cloud-concierge-deploy.yaml'
+
+jobs:
+  deploy:
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.CLOUD_CONCIERGE_GOOGLE_APPLICATION_CREDENTIALS }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloud-concierge/functions
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+
+    - name: Set up gcloud
+      uses: google-github-actions/setup-gcloud@v3
+      with:
+        project_id: ${{ secrets.CLOUD_CONCIERGE_GCP_PROJECT_ID }}
+
+    - name: Set credential json
+      run: echo ${{ secrets.CLOUD_CONCIERGE_SERVICE_ACCOUNT_KEY_BASE64 }} | base64 -d > $GOOGLE_APPLICATION_CREDENTIALS
+
+    - name: Authenticate gcloud
+      run: gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+
+    - name: Deploy to Cloud Functions
+      run: gcloud functions deploy postRequestFunction --gen2 --runtime=nodejs24 --region=us-central1 --trigger-http --set-env-vars FIREBASE_DATABASE_URL="${{ secrets.CLOUD_CONCIERGE_FIREBASE_DATABASE_URL }}" --entry-point=postRequestFunction --source=. --allow-unauthenticated
