@@ -57,7 +57,7 @@ npm --prefix functions run serve -- --project demo-cloud-concierge
 
 ## CI
 
-`cloud-concierge CI` はmainへのpushとすべてのPull Requestで起動し、チェック名を `cloud-concierge-test` に固定します。Node.js 24.xの単一matrixによる検証内容、`npm install`、cache、lintの順序・Actionsの版は移行元のままです。Java setup・Emulator検証は追加しません。
+`cloud-concierge CI` はmainへのpushとすべてのPull Requestで起動し、チェック名を `cloud-concierge-test` に固定します。移行元の単一要素matrixを外し、同じNode.js `24.x`を直接指定します。`npm install`、cache、lintの順序・Actionsの版は移行元のままです。Java setup・Emulator検証は追加しません。
 
 checkout後に、`cloud-concierge/**` と専用CI・deploy workflowの変更を判定し、該当する変更がある場合だけ既存の検証を実行します。他サービスやルート文書だけの変更ではNode.js setup・npm install・cache・lintをスキップし、変更判定の成功でチェックを成功させます。変更判定や検証の失敗はジョブの失敗です。workflow自体やジョブをパス条件で起動しない構成にはしません。
 

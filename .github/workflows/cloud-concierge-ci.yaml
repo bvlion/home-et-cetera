@@ -17,10 +17,6 @@ jobs:
       run:
         working-directory: cloud-concierge/functions
 
-    strategy:
-      matrix:
-        node-version: [24.x]
-
     steps:
     - name: checkout
       uses: actions/checkout@v4
@@ -39,7 +35,7 @@ jobs:
       if: steps.filter.outputs.should-verify-cloud-concierge == 'true'
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '24.x'
 
     - name: npm install
       if: steps.filter.outputs.should-verify-cloud-concierge == 'true'
