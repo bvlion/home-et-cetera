@@ -1,14 +1,17 @@
 name: cloud-concierge CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
-    paths:
-      - .github/workflows/cloud-concierge-ci.yaml
-      - 'cloud-concierge/**.js'
-      - 'cloud-concierge/**.json'
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   cloud-concierge-test:
+    name: cloud-concierge-test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -21,16 +24,29 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v4
-    
+
+    - name: Detect cloud-concierge changes
+      id: filter
+      uses: dorny/paths-filter@v4
+      with:
+        filters: |
+          should-verify-cloud-concierge:
+            - 'cloud-concierge/**'
+            - '.github/workflows/cloud-concierge-ci.yaml'
+            - '.github/workflows/cloud-concierge-deploy.yaml'
+
     - name: Setup Node.js
+      if: steps.filter.outputs.should-verify-cloud-concierge == 'true'
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
 
     - name: npm install
+      if: steps.filter.outputs.should-verify-cloud-concierge == 'true'
       run: npm install
 
     - name: Cache node_modules dev packages
+      if: steps.filter.outputs.should-verify-cloud-concierge == 'true'
       uses: actions/cache@v4
       with:
         path: ~/node_modules
@@ -39,4 +55,5 @@ jobs:
           ${{ runner.os }}-cloud-concierge-node-dev-
 
     - name: Check lint
+      if: steps.filter.outputs.should-verify-cloud-concierge == 'true'
       run: npm run lint

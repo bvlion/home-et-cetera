@@ -57,9 +57,20 @@ npm --prefix functions run serve -- --project demo-cloud-concierge
 
 ## CI
 
-`cloud-concierge CI` は、専用CI workflowまたは `cloud-concierge/` 内のJavaScript・JSONに変更のあるPull Requestで起動します。移行元と同じcheckout、Node.js 24、`npm install`、cache、lintの順序・Actionsの版を維持します。ジョブ名とcache key・lockfile判定をサービスごとに分離します。main push、paths-filter、Java setup、Emulator検証は追加しません。
+`cloud-concierge CI` はmainへのpushとすべてのPull Requestで起動し、チェック名を `cloud-concierge-test` に固定します。Node.js 24.xの単一matrixによる検証内容、`npm install`、cache、lintの順序・Actionsの版は移行元のままです。Java setup・Emulator検証は追加しません。
 
-他サービスだけの変更ではこのworkflowは起動しません。main rulesetに `cloud-concierge-test` は追加せず、他サービスのCI・必須チェック設定も変更しません。
+checkout後に、`cloud-concierge/**` と専用CI・deploy workflowの変更を判定し、該当する変更がある場合だけ既存の検証を実行します。他サービスやルート文書だけの変更ではNode.js setup・npm install・cache・lintをスキップし、変更判定の成功でチェックを成功させます。変更判定や検証の失敗はジョブの失敗です。workflow自体やジョブをパス条件で起動しない構成にはしません。
+
+### main rulesetへの登録
+
+このworkflowがmainに入る前に必須チェックへ登録すると、他のPRが存在しないチェック待ちになるため、以下の順序で切り替えます。
+
+1. PR #108を承認後にマージし、main上で `cloud-concierge-test` が生成・成功することを確認します。
+2. main ruleset `Protect main`（ID `20116833`）のRequired status checksへ、GitHub Actions（integration ID `15368`）の `cloud-concierge-test` を追加します。既存の `cadence-xs-test` と `cloud-glance-test`、その他の保護設定は維持します。
+3. `cloud-concierge-test (24.x)` は登録しません。古いmatrix付きの名前が登録されていれば除去します。すべてのPRで生成される固定名だけを本サービスの必須チェックにします。
+4. 無関係な変更のPRでも固定名のチェックが成功し、未生成の必須チェック待ちにならないことを確認します。
+
+登録前の既存PRでは、新しいworkflowによるチェックを生成するためにブランチの更新・新しいコミットなどでCIを再実行する必要があります。他サービスのCI・必須チェックは変更しません。
 
 ## デプロイと非公開設定
 

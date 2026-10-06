@@ -13,7 +13,8 @@
 
 ## 検証と公開情報
 
-- `npm --prefix functions install`、`npm --prefix functions run lint` を本ディレクトリから実行します。Node.js 24を使用します。CIは移行元と同じPull Request時のcheckout、Node.js setup、npm install、cache、lintを維持します。
+- `npm --prefix functions install`、`npm --prefix functions run lint` を本ディレクトリから実行します。Node.js 24を使用します。CIの検証内容は移行元のNode.js setup、npm install、cache、lintを維持します。
+- CIはmain pushとすべてのPull Requestで固定名 `cloud-concierge-test` を起動します。サービス・専用workflowの変更時だけ既存の検証を実行し、無関係な変更でも変更判定の成功でチェックを成功させます。変更判定・検証の失敗を成功に扱いません。mainへのマージ後、READMEの手順で必須チェックへ登録します。
 - 移行確認のための新しい検証基盤や本番デプロイ前の追加検証を、今回の移行へ混在させません。本番RTDB・機器API・Webhookを検証目的で操作しません。
 - `.envrc`、`.env*`、認証JSON、RTDB exportをコピー・公開しません。既存Publicコード以外の通知文面や秘密値・家庭固有の実値を追加しません。実データからfixtureを生成しません。
 - デプロイや実機確認の結果は、秘密値・URL・実リクエスト・実応答・実ログを除いた成否だけ記録します。

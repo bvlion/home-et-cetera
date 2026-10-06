@@ -55,6 +55,8 @@
 
 `cloud-glance CI`もmainへのpushとすべてのPull Requestで `cloud-glance-test` を起動します。cloud-glanceまたは専用workflowの変更時だけ検証し、関係しない変更では重い検証をスキップしてチェックを成功させます。Issue #88に従い、workflowのmainへのマージ後に `Protect main` の必須チェックへ `cloud-glance-test` を追加します。設定手順は[専用README](cloud-glance/README.md)を参照してください。
 
+`cloud-concierge CI`もmainへのpushとすべてのPull Requestで固定名 `cloud-concierge-test` を起動します。サービスまたは専用workflowの変更時だけ、移行元と同じNode.js 24・npm install・cache・lintを実行します。無関係な変更でも変更判定の成功でチェックを成功させます。Issue #84に従い、mainへのマージ後に `Protect main` の必須チェックへ固定名を追加します。[専用README](cloud-concierge/README.md)に登録順序を記載しています。
+
 ## Publicリポジトリの運用
 
 - 本番値、個人情報、秘密情報をコミットしません。
