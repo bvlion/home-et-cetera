@@ -24,10 +24,7 @@ if (!is_string($html)) {
 }
 
 try {
-    $pdf = (new HtmlToPdfConverter())->convert(
-        $html,
-        mailLogContext: ['conversion_context' => 'cli'],
-    );
+    $pdf = (new HtmlToPdfConverter())->convert($html);
 } catch (Throwable) {
     fwrite(STDERR, "HTML to PDF conversion failed.\n");
     exit(1);
