@@ -289,7 +289,6 @@ final class HtmlToPdfConverter
                 !is_string($convertedHtml)
                 || strlen($convertedHtml) > self::MAX_HTML_BYTES
             ) {
-
                 throw new RuntimeException(
                     'HTML body exceeds the maximum size allowed for PDF '
                         . 'conversion.',
@@ -785,7 +784,6 @@ final class HtmlToPdfConverter
                 }
 
                 $html = $convertedHtml;
-
             }
         }
 
