@@ -276,7 +276,7 @@ make check
 - `make check`は`compose.check.yaml`を検証専用のCompose project（`cadence-xs-check`）で実行します。開発用`compose.yaml`が使うcontainer・network・volume・host port（8080番）とは別のprojectであり、開発用の`database` volumeを共有しません。検証用DBは検証専用の使い捨てvolumeを使用します。
 - 検証用のappコンテナは実`.env`を読み込みません。`.env.example`の架空値だけを`/app/.env`へread-onlyで重ね、Composeの変数展開にも`--env-file .env.example`を使用します。
 - 成功・失敗にかかわらず、`make check`終了時に検証専用project（`cadence-xs-check`）のcontainer・network・volumeだけをcleanupします。開発中の`compose.yaml`側のcontainer・DBには一切影響しません。
-- GitHub Actionsのcadence-xs専用workflow（リポジトリルートの`.github/workflows/cadence-xs-ci.yaml`、表示名`cadence-xs CI`）はPull Requestとmainへのpushで`cadence-xs-test`ジョブを起動します。`cadence-xs/`またはCI定義に変更がある場合だけ、`cadence-xs/`で同じ`make check`を実行します。ルートREADMEのみなど無関係な変更では重い検証をスキップし、変更判定が成功すればジョブを成功させます。変更判定や検証が失敗した場合はジョブを失敗させます。main rulesetの必須チェックも`cadence-xs-test`へ切り替えます。リポジトリルートからは`make -C cadence-xs check`を実行します。
+- GitHub Actionsのcadence-xs専用workflow（リポジトリルートの`.github/workflows/cadence-xs-ci.yaml`、表示名`cadence-xs CI`）はPull Requestとmainへのpushで新しい`cadence-xs-test`ジョブを起動します。`cadence-xs/`またはCI定義に変更がある場合だけ、`cadence-xs/`で同じ`make check`を実行します。ルートREADMEのみなど無関係な変更では重い検証をスキップし、変更判定が成功すればジョブを成功させます。変更判定や検証が失敗した場合はジョブを失敗させます。main rulesetは既存の依存更新PRが解消した後に`cadence-xs-test`を必須へ切り替え、旧`test`を削除します。切替まで旧`test`ジョブをスキップ成功として生成します。リポジトリルートからは`make -C cadence-xs check`を実行します。
 
 `make check`が異常終了してcleanupが行われなかった場合は、検証専用projectだけを対象に手動でcleanupできます。
 
