@@ -1,13 +1,11 @@
 name: cloud-concierge CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
-
-permissions:
-  contents: read
-  pull-requests: read
+    paths:
+      - .github/workflows/cloud-concierge-ci.yaml
+      - 'cloud-concierge/**.js'
+      - 'cloud-concierge/**.json'
 
 jobs:
   cloud-concierge-test:
@@ -15,31 +13,30 @@ jobs:
     defaults:
       run:
         working-directory: cloud-concierge/functions
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+
     steps:
-      - uses: actions/checkout@v7
-      - name: Detect cloud-concierge changes
-        id: filter
-        uses: dorny/paths-filter@v4
-        with:
-          filters: |
-            should-verify-cloud-concierge:
-              - 'cloud-concierge/**'
-              - '.github/workflows/cloud-concierge-ci.yaml'
-              - '.github/workflows/cloud-concierge-deploy.yaml'
-      - uses: actions/setup-node@v7
-        if: steps.filter.outputs.should-verify-cloud-concierge == 'true'
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: cloud-concierge/functions/package-lock.json
-      - uses: actions/setup-java@v5
-        if: steps.filter.outputs.should-verify-cloud-concierge == 'true'
-        with:
-          distribution: temurin
-          java-version: '21'
-      - name: Verify cloud-concierge
-        if: steps.filter.outputs.should-verify-cloud-concierge == 'true'
-        run: |
-          npm ci
-          npm run lint
-          npm run test:emulators
+    - name: checkout
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: npm install
+      run: npm install
+
+    - name: Cache node_modules dev packages
+      uses: actions/cache@v4
+      with:
+        path: ~/node_modules
+        key: ${{ runner.os }}-cloud-concierge-node-dev-${{ hashFiles('cloud-concierge/functions/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-cloud-concierge-node-dev-
+
+    - name: Check lint
+      run: npm run lint

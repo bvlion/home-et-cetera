@@ -1,7 +1,0 @@
-.gcloudignore
-node_modules/
-.env*
-.envrc
-data/
-*.log
-credentials*.json

@@ -81,7 +81,7 @@ const remo = async (admin, urlNames) => {
     'Authorization': 'Bearer ' + remoToken
   }
 
-  const urlPromises = urlNames.map((urlName) =>
+  const urlPromises = urlNames.map((urlName) => 
     admin.database().ref('/remo/url/' + urlName).once('value')
       .then((snapshot) => snapshot.val())
       .catch((err) => {
@@ -108,7 +108,7 @@ const remo = async (admin, urlNames) => {
     .then((url) => urls = url)
     .catch((err) => {
       console.log(err)
-    })
+    }) 
 
   const promises = []
   const waitPromise = () => new Promise(resolve => setTimeout(resolve, 1500))

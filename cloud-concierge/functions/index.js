@@ -53,7 +53,7 @@ async function asyncProcess(admin, request, response) {
       minute: '2-digit',
       hour12: false,
     })
-    raspi.speakText(process.env.SPEAK_TIME_TEMPLATE.replaceAll('{time}', nowJst).replaceAll('{timestamp}', new Date().toISOString()), admin, execSend)
+    raspi.speakText(`時刻は${nowJst}です … ${new Date().toISOString()} … 45 … home`, admin, execSend)
   } else if (request.body.type == 'curtain') {
     raspi.curtain(request.body.command, admin, execSend)
   } else if (request.body.type == 'pc_switch') {

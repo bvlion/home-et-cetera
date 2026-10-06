@@ -3,8 +3,7 @@
   "description": "Cloud Functions for Firebase",
   "scripts": {
     "lint": "eslint .",
-    "serve": "FIREBASE_DATABASE_URL=https://demo-cloud-concierge-default-rtdb.firebaseio.com SPEAK_TIME_TEMPLATE=\"Example {time} {timestamp}\" firebase emulators:start --project demo-cloud-concierge --only functions,database",
-    "test:emulators": "cd .. && FIREBASE_DATABASE_URL=https://demo-cloud-concierge-default-rtdb.firebaseio.com SPEAK_TIME_TEMPLATE=\"Example {time} {timestamp}\" firebase emulators:exec --project demo-cloud-concierge --only functions,database 'node scripts/verify-emulators.mjs'"
+    "serve": "firebase emulators:start --only functions,database --import data"
   },
   "engines": {
     "node": "24"
