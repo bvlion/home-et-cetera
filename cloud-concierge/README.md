@@ -63,14 +63,9 @@ checkout後に、`cloud-concierge/**` と専用CI・deploy workflowの変更を�
 
 ### main rulesetへの登録
 
-このworkflowがmainに入る前に必須チェックへ登録すると、他のPRが存在しないチェック待ちになるため、以下の順序で切り替えます。
+main ruleset `Protect main`（ID `20116833`）のRequired status checksには、GitHub Actions（integration ID `15368`）の固定名 `cloud-concierge-test` を登録済みです。
 
-1. PR #108を承認後にマージし、main上で `cloud-concierge-test` が生成・成功することを確認します。
-2. main ruleset `Protect main`（ID `20116833`）のRequired status checksへ、GitHub Actions（integration ID `15368`）の `cloud-concierge-test` を追加します。既存の `cadence-xs-test` と `cloud-glance-test`、その他の保護設定は維持します。
-3. `cloud-concierge-test (24.x)` は登録しません。古いmatrix付きの名前が登録されていれば除去します。すべてのPRで生成される固定名だけを本サービスの必須チェックにします。
-4. 無関係な変更のPRでも固定名のチェックが成功し、未生成の必須チェック待ちにならないことを確認します。
-
-登録前の既存PRでは、新しいworkflowによるチェックを生成するためにブランチの更新・新しいコミットなどでCIを再実行する必要があります。他サービスのCI・必須チェックは変更しません。
+既存の `cadence-xs-test` と `cloud-glance-test`、その他の保護設定は維持しています。`cloud-concierge-test (24.x)` のようなmatrix付きの旧名は登録していません。無関係な変更のPull Requestでも固定名のチェック自体は生成され、サービス固有の検証だけをスキップして成功します。
 
 ## デプロイと非公開設定
 
