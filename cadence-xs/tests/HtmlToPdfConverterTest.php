@@ -924,6 +924,61 @@ PHP,
         );
     }
 
+    public function testLogsOnlySourceAndFailureReasonForFailedHttpImage(): void
+    {
+        $logPath = tempnam(sys_get_temp_dir(), 'cadence-xs-image-failure-log-');
+        self::assertIsString($logPath);
+        $previousErrorLog = ini_get('error_log');
+
+        try {
+            ini_set('error_log', $logPath);
+
+            (new HtmlToPdfConverter())->convert(
+                '<html><body><img src="https://images.example.test/missing.png">'
+                    . '</body></html>',
+                [],
+                new Client([
+                    'handler' => new MockHandler([
+                        new Response(503, ['Content-Type' => 'image/png']),
+                    ]),
+                ]),
+                static fn (string $host): array => ['93.184.216.34'],
+            );
+
+            $logContent = file_get_contents($logPath);
+            self::assertIsString($logContent);
+            self::assertStringContainsString(
+                '"event":"pdf_image_failed"',
+                $logContent,
+            );
+            self::assertStringContainsString(
+                '"src":"https://images.example.test/missing.png"',
+                $logContent,
+            );
+            self::assertStringContainsString(
+                '"failure_reason":"http_status"',
+                $logContent,
+            );
+            self::assertStringNotContainsString('"resolved_ips"', $logContent);
+            self::assertStringNotContainsString('"status"', $logContent);
+            self::assertStringNotContainsString(
+                '"response_content_type"',
+                $logContent,
+            );
+            self::assertStringNotContainsString(
+                '"exception_message"',
+                $logContent,
+            );
+            self::assertStringNotContainsString('"subject"', $logContent);
+        } finally {
+            ini_set(
+                'error_log',
+                is_string($previousErrorLog) ? $previousErrorLog : '',
+            );
+            @unlink($logPath);
+        }
+    }
+
     public function testRejectsOversizedImageFromContentLength(): void
     {
         $pdf = (new HtmlToPdfConverter())->convert(
