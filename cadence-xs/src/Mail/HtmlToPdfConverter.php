@@ -112,9 +112,7 @@ final class HtmlToPdfConverter
         ?ClientInterface $httpClient = null,
         ?callable $hostResolver = null,
     ): string {
-
         if (strlen($html) > self::MAX_HTML_BYTES) {
-
             throw new RuntimeException(
                 'HTML body exceeds the maximum size allowed for PDF '
                     . 'conversion.',
@@ -141,7 +139,6 @@ final class HtmlToPdfConverter
         }
 
         if ($isLoaded) {
-
             foreach (iterator_to_array($document->childNodes) as $childNode) {
                 if ($childNode->nodeType === XML_PI_NODE) {
                     $document->removeChild($childNode);
@@ -313,7 +310,6 @@ final class HtmlToPdfConverter
                 $source = trim($image->getAttribute('src'));
 
                 if ($source === '') {
-
                     continue;
                 }
 
@@ -364,7 +360,6 @@ final class HtmlToPdfConverter
                         }
 
                         $resolvedImages[$resourceKey] = $dataUri;
-
                     }
                 } elseif (
                     str_starts_with($lowerSource, 'http://')
@@ -379,7 +374,6 @@ final class HtmlToPdfConverter
                         $redirectCount = 0;
                         $addresses = [];
                         $maximumReadableBytes = 0;
-                        $receivedBytes = 0;
                         $isSizeLimitExceeded = false;
                         $httpClient ??= new Client();
 
@@ -591,12 +585,9 @@ final class HtmlToPdfConverter
                                             $downloadTotal,
                                             $downloaded,
                                         ) use (
-                                            &$receivedBytes,
                                             &$isSizeLimitExceeded,
                                             $maximumReadableBytes,
                                         ): bool {
-                                            $receivedBytes = $downloaded;
-
                                             if ($downloaded > $maximumReadableBytes) {
                                                 $isSizeLimitExceeded = true;
 
@@ -818,12 +809,10 @@ final class HtmlToPdfConverter
             $dompdf->render();
             $pdf = $dompdf->output();
         } catch (Throwable) {
-
             throw new RuntimeException('HTML to PDF conversion failed.');
         }
 
         if (!is_string($pdf) || $pdf === '') {
-
             throw new RuntimeException('HTML to PDF conversion failed.');
         }
 
