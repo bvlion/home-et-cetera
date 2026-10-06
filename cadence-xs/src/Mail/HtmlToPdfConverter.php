@@ -113,7 +113,6 @@ final class HtmlToPdfConverter
         ?callable $hostResolver = null,
     ): string {
 
-
         if (strlen($html) > self::MAX_HTML_BYTES) {
 
             throw new RuntimeException(
@@ -311,7 +310,6 @@ final class HtmlToPdfConverter
                     continue;
                 }
 
-
                 $source = trim($image->getAttribute('src'));
 
                 if ($source === '') {
@@ -366,25 +364,6 @@ final class HtmlToPdfConverter
                         }
 
                         $resolvedImages[$resourceKey] = $dataUri;
-
-                        if (!is_string($dataUri)) {
-                            if (!is_string($content)) {
-                            } elseif (
-                                !is_string($contentType)
-                                || !in_array(
-                                    $contentType,
-                                    $allowedContentTypes,
-                                    true,
-                                )
-                            ) {
-                            } elseif (strlen($content) > self::MAX_IMAGE_BYTES) {
-                            } elseif (
-                                $totalImageBytes + strlen($content)
-                                > self::MAX_TOTAL_IMAGE_BYTES
-                            ) {
-                            } elseif ($actualContentType !== $contentType) {
-                            }
-                        }
 
                     }
                 } elseif (
@@ -638,7 +617,6 @@ final class HtmlToPdfConverter
                                 );
                                 $statusCode = $response->getStatusCode();
 
-
                                 if ($isSizeLimitExceeded) {
                                     break;
                                 }
@@ -848,7 +826,6 @@ final class HtmlToPdfConverter
 
             throw new RuntimeException('HTML to PDF conversion failed.');
         }
-
 
         return $pdf;
     }
