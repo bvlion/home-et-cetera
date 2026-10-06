@@ -1,0 +1,71 @@
+name: cloud-concierge deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cloud-concierge/**/*.js'
+      - 'cloud-concierge/**/*.json'
+      - 'cloud-concierge/functions/.gcloudignore'
+      - '.github/workflows/cloud-concierge-deploy.yaml'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloud-concierge/functions
+    env:
+      CLOUD_CONCIERGE_GCP_PROJECT_ID: ${{ secrets.CLOUD_CONCIERGE_GCP_PROJECT_ID }}
+      CLOUD_CONCIERGE_SERVICE_ACCOUNT_KEY_BASE64: ${{ secrets.CLOUD_CONCIERGE_SERVICE_ACCOUNT_KEY_BASE64 }}
+      FIREBASE_DATABASE_URL: ${{ secrets.CLOUD_CONCIERGE_FIREBASE_DATABASE_URL }}
+      SPEAK_TIME_TEMPLATE: ${{ secrets.CLOUD_CONCIERGE_SPEAK_TIME_TEMPLATE }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: cloud-concierge/functions/package-lock.json
+      - name: Set private temporary file paths
+        run: |
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/cloud-concierge-credentials.json" >> "$GITHUB_ENV"
+          echo "CLOUD_CONCIERGE_ENVIRONMENT_FILE=$RUNNER_TEMP/cloud-concierge-environment.json" >> "$GITHUB_ENV"
+      - name: Check deployment settings and prepare private files
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          for (const name of ['CLOUD_CONCIERGE_GCP_PROJECT_ID', 'CLOUD_CONCIERGE_SERVICE_ACCOUNT_KEY_BASE64', 'FIREBASE_DATABASE_URL', 'SPEAK_TIME_TEMPLATE']) {
+            if (!process.env[name]) throw new Error('Missing deployment setting: ' + name);
+          }
+          for (const placeholder of ['{time}', '{timestamp}']) {
+            if (!process.env.SPEAK_TIME_TEMPLATE.includes(placeholder)) throw new Error('Missing notification template placeholder: ' + placeholder);
+          }
+          const credentials = Buffer.from(process.env.CLOUD_CONCIERGE_SERVICE_ACCOUNT_KEY_BASE64, 'base64');
+          const account = JSON.parse(credentials);
+          console.log('::add-mask::' + account.client_email);
+          fs.writeFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, credentials, {mode: 0o600});
+          fs.writeFileSync(process.env.CLOUD_CONCIERGE_ENVIRONMENT_FILE, JSON.stringify({FIREBASE_DATABASE_URL: process.env.FIREBASE_DATABASE_URL, SPEAK_TIME_TEMPLATE: process.env.SPEAK_TIME_TEMPLATE}), {mode: 0o600});
+          NODE
+      - name: Verify deployment source
+        run: |
+          npm ci
+          npm run lint
+      - uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: ${{ secrets.CLOUD_CONCIERGE_GCP_PROJECT_ID }}
+      - name: Authenticate gcloud
+        run: gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS" --project="$CLOUD_CONCIERGE_GCP_PROJECT_ID" --quiet
+      - name: Deploy to Cloud Functions
+        run: >-
+          gcloud functions deploy postRequestFunction
+          --project="$CLOUD_CONCIERGE_GCP_PROJECT_ID"
+          --gen2 --runtime=nodejs24 --region=us-central1 --trigger-http
+          --env-vars-file="$CLOUD_CONCIERGE_ENVIRONMENT_FILE"
+          --entry-point=postRequestFunction --source=. --allow-unauthenticated --quiet --format=none
+      - name: Remove private files
+        if: always()
+        run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS" "$CLOUD_CONCIERGE_ENVIRONMENT_FILE"

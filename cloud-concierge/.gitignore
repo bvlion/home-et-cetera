@@ -1,0 +1,9 @@
+node_modules/
+.firebase/
+.firebaserc
+.env*
+.envrc
+*.log
+functions/data/*
+!functions/data/.gitkeep
+credentials*.json

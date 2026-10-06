@@ -7,7 +7,7 @@
 | サービス | 管理状況 | 説明・関連Issue |
 | --- | --- | --- |
 | cadence-xs | 管理中。`cadence-xs/`に配置 | メール処理・記念日通知などを提供するXServer上のHTTP API。[専用README](cadence-xs/README.md) |
-| cloud-concierge | 今後統合予定 | [Issue #84](https://github.com/bvlion/home-et-cetera/issues/84)で扱います |
+| cloud-concierge | 管理中。`cloud-concierge/`に配置。本番切り替え条件は専用READMEを参照 | Firebase Functions / RTDBで家庭内操作を取り次ぐサービス。[専用README](cloud-concierge/README.md)、[Issue #84](https://github.com/bvlion/home-et-cetera/issues/84) |
 | pi-steward | 今後統合予定 | [Issue #85](https://github.com/bvlion/home-et-cetera/issues/85)で扱います |
 | cloud-glance | 管理中。`cloud-glance/`に配置。本番移行確認は専用READMEを参照 | Googleログイン付きの単発質問・任意のSlack共有。[専用README](cloud-glance/README.md)、[Issue #88](https://github.com/bvlion/home-et-cetera/issues/88) |
 
@@ -24,7 +24,9 @@
 | `.github/workflows/cadence-xs-ci.yaml`、`.github/workflows/cadence-xs-deploy.yaml` | cadence-xsの検証・本番デプロイ |
 | `cloud-glance/` | Firebase Hosting / Cloud Functions / Authenticationの単発質問サービス。説明・作業ルール・検証を個別管理 |
 | `.github/workflows/cloud-glance-ci.yaml`、`.github/workflows/cloud-glance-deploy.yaml` | cloud-glance専用の検証と `cloud-glance-v*` タグによるデプロイ |
-| `.github/dependabot.yml` | cadence-xsのComposer依存関係、cloud-glanceのnpm依存関係、GitHub Actionsの更新設定 |
+| `cloud-concierge/` | 家庭内操作を取り次ぐFirebase Functions / RTDBサービス。説明・作業ルール・検証を個別管理 |
+| `.github/workflows/cloud-concierge-ci.yaml`、`.github/workflows/cloud-concierge-deploy.yaml` | cloud-concierge専用の検証とmainへのpushによるgcloudデプロイ |
+| `.github/dependabot.yml` | cadence-xsのComposer依存関係、cloud-glance・cloud-conciergeのnpm依存関係、GitHub Actionsの更新設定 |
 
 開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`cadence-xs-v*`タグによる本番デプロイでは、対象タグの`cadence-xs/`だけを更新します。
 
