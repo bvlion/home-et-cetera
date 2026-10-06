@@ -11,7 +11,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  test:
+  cadence-xs-test:
     runs-on: ubuntu-latest
 
     steps:
