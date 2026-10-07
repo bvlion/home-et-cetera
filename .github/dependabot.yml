@@ -23,6 +23,18 @@ updates:
     schedule:
       interval: "daily"
 
+  - package-ecosystem: "npm"
+    directory: "/pi-steward"
+    schedule:
+      interval: "weekly"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    groups:
+      npm-minor-patch:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

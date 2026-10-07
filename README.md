@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | cadence-xs | 管理中。`cadence-xs/`に配置 | メール処理・記念日通知などを提供するXServer上のHTTP API。[専用README](cadence-xs/README.md) |
 | cloud-concierge | 管理中。`cloud-concierge/`に配置。本番切り替え条件は専用READMEを参照 | Firebase Functions / RTDBで家庭内操作を取り次ぐサービス。[専用README](cloud-concierge/README.md)、[Issue #84](https://github.com/bvlion/home-et-cetera/issues/84) |
-| pi-steward | 今後統合予定 | [Issue #85](https://github.com/bvlion/home-et-cetera/issues/85)で扱います |
+| pi-steward | 管理中。`pi-steward/`に配置。Raspberry Piの切り替え・archive条件は専用READMEを参照 | Realtime Databaseの変更を受けて家庭内機器の操作と通知を実行する常駐サービス。[専用README](pi-steward/README.md)、[Issue #85](https://github.com/bvlion/home-et-cetera/issues/85) |
 | cloud-glance | 管理中。`cloud-glance/`に配置。本番移行確認は専用READMEを参照 | Googleログイン付きの単発質問・任意のSlack共有。[専用README](cloud-glance/README.md)、[Issue #88](https://github.com/bvlion/home-et-cetera/issues/88) |
 
 [Issue #69](https://github.com/bvlion/home-et-cetera/issues/69)ではリポジトリ全体の位置づけと文書を整理します。cloud-concierge（Issue #84）、pi-steward（Issue #85）、cloud-glance（Issue #88）の統合・移行と、各サービスの実行基盤・アーキテクチャ変更は、それぞれのIssueで扱います。
@@ -26,7 +26,9 @@
 | `.github/workflows/cloud-glance-ci.yaml`、`.github/workflows/cloud-glance-deploy.yaml` | cloud-glance専用の検証と `cloud-glance-v*` タグによるデプロイ |
 | `cloud-concierge/` | 家庭内操作を取り次ぐFirebase Functions / RTDBサービス。説明・作業ルール・検証を個別管理 |
 | `.github/workflows/cloud-concierge-ci.yaml`、`.github/workflows/cloud-concierge-deploy.yaml` | cloud-concierge専用の検証とmainへのpushによるgcloudデプロイ |
-| `.github/dependabot.yml` | cadence-xsのComposer依存関係、cloud-glance・cloud-conciergeのnpm依存関係、GitHub Actionsの更新設定 |
+| `pi-steward/` | Raspberry Pi / systemd / root cronで動く機器操作・通知サービス。説明・作業ルール・検証を個別管理 |
+| `.github/workflows/pi-steward-ci.yaml` | pi-steward専用の既存テスト・構文検査・ShellCheck |
+| `.github/dependabot.yml` | cadence-xsのComposer依存関係、cloud-glance・cloud-concierge・pi-stewardのnpm依存関係、GitHub Actionsの更新設定 |
 
 開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`cadence-xs-v*`タグによる本番デプロイでは、対象タグの`cadence-xs/`だけを更新します。
 
@@ -57,7 +59,11 @@
 
 `cloud-concierge CI`もmainへのpushとすべてのPull Requestで固定名 `cloud-concierge-test` を起動します。サービスまたは専用workflowの変更時だけ、移行元と同じNode.js 24・npm install・cache・lintを実行します。無関係な変更でも変更判定の成功でチェックを成功させます。Issue #84に従い、`Protect main` の必須チェックへ固定名 `cloud-concierge-test` を登録済みです。
 
+`pi-steward CI`もmainへのpushとすべてのPull Requestで固定名 `pi-steward-test` を起動します。サービスまたは専用workflowの変更時だけ、Node.js 22でnpm ci・既存テスト・Node.js/Bash構文検査・ShellCheckを実行します。無関係な変更では検証をスキップし、変更判定の成功でチェックを成功させます。
+
 ## Publicリポジトリの運用
+
+pi-stewardは移行元の公開可能な現行snapshotだけを取り込み、privateリポジトリのGit履歴を継承しません。検証は `npm --prefix pi-steward ci` と `npm --prefix pi-steward test` で実行します。既存のRaspberry Pi / systemd / cron運用を維持し、移行に伴うdeploy CIは追加しません。
 
 - 本番値、個人情報、秘密情報をコミットしません。
 - Issue、PR、テスト、fixture、ログ、SQLにも実データを含めません。

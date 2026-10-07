@@ -42,6 +42,12 @@ cloud-conciergeに関する作業では、必ず[専用AGENTS.md](cloud-concierg
 
 他サービスの実装・設定・検証・デプロイには適用しません。
 
+## pi-stewardのルールの適用範囲
+
+pi-stewardに関する作業では、必ず[専用AGENTS.md](pi-steward/AGENTS.md)を読み、共通ルールと併せて適用してください。
+
+専用ルールは `pi-steward/`、`.github/workflows/pi-steward-ci.yaml`、`.github/dependabot.yml` の pi-steward 用npm設定に適用します。他サービスの実装・設定・検証・デプロイには適用しません。
+
 ## 判断と実装
 
 - 既存リポジトリや具体的な実装が情報源として示された場合は、対象コードを確認してから判断します。

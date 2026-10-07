@@ -1,0 +1,22 @@
+{
+  "name": "pi-steward",
+  "version": "1.0.0",
+  "description": "Raspberry Pi上でRealtime Databaseの変更を受け、家庭内機器の操作と通知を実行する。",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bvlion/home-et-cetera.git",
+    "directory": "pi-steward"
+  },
+  "author": "bvlion",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.20.0",
+    "firebase-admin": "^14.3.0",
+    "log4js": "^6.9.1",
+    "node-aes-cmac": "^0.1.1"
+  }
+}

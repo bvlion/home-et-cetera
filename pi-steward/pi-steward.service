@@ -1,0 +1,15 @@
+[Unit]
+Description=pi-steward Service
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/node index.js
+Restart=on-failure
+RestartSec=10
+KillMode=process
+WorkingDirectory=@REPOSITORY_DIRECTORY@
+
+[Install]
+WantedBy=multi-user.target
