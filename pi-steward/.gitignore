@@ -1,0 +1,11 @@
+node_modules
+.git
+.DS_Store
+*.swp
+logs/exec.log*
+.node-xmlhttprequest-content*
+.node-xmlhttprequest-sync*
+test.js
+monitor_state.json
+.env
+firebase-adminsdk.json
