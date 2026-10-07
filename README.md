@@ -27,6 +27,7 @@
 | `cloud-concierge/` | 家庭内操作を取り次ぐFirebase Functions / RTDBサービス。説明・作業ルール・検証を個別管理 |
 | `.github/workflows/cloud-concierge-ci.yaml`、`.github/workflows/cloud-concierge-deploy.yaml` | cloud-concierge専用の検証とmainへのpushによるgcloudデプロイ |
 | `pi-steward/` | Raspberry Pi / systemd / root cronで動く機器操作・通知サービス。説明・作業ルール・検証を個別管理 |
+| `.github/workflows/pi-steward-ci.yaml` | pi-steward専用の既存テスト・構文検査・ShellCheck |
 | `.github/dependabot.yml` | cadence-xsのComposer依存関係、cloud-glance・cloud-concierge・pi-stewardのnpm依存関係、GitHub Actionsの更新設定 |
 
 開発・検証・デプロイ手順は[専用README](cadence-xs/README.md)を参照してください。検証はリポジトリルートから`make -C cadence-xs check`で実行します。`cadence-xs-v*`タグによる本番デプロイでは、対象タグの`cadence-xs/`だけを更新します。
@@ -57,6 +58,8 @@
 `cloud-glance CI`もmainへのpushとすべてのPull Requestで `cloud-glance-test` を起動します。cloud-glanceまたは専用workflowの変更時だけ検証し、関係しない変更では重い検証をスキップしてチェックを成功させます。Issue #88に従い、workflowのmainへのマージ後に `Protect main` の必須チェックへ `cloud-glance-test` を追加します。設定手順は[専用README](cloud-glance/README.md)を参照してください。
 
 `cloud-concierge CI`もmainへのpushとすべてのPull Requestで固定名 `cloud-concierge-test` を起動します。サービスまたは専用workflowの変更時だけ、移行元と同じNode.js 24・npm install・cache・lintを実行します。無関係な変更でも変更判定の成功でチェックを成功させます。Issue #84に従い、`Protect main` の必須チェックへ固定名 `cloud-concierge-test` を登録済みです。
+
+`pi-steward CI`もmainへのpushとすべてのPull Requestで固定名 `pi-steward-test` を起動します。サービスまたは専用workflowの変更時だけ、Node.js 22でnpm ci・既存テスト・Node.js/Bash構文検査・ShellCheckを実行します。無関係な変更では検証をスキップし、変更判定の成功でチェックを成功させます。
 
 ## Publicリポジトリの運用
 

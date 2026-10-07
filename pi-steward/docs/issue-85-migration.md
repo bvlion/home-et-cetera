@@ -22,7 +22,7 @@
 
 実行コード、設定契約、既存テストの8ファイル（`index.js`、`holiday_notification.js`、`logger.js`、`shells/pc_switch.sh`、`test/dependencies.test.js`、`.env.example`、`.gitignore`、`logs/.gitkeep`）は移行元とbyte単位で一致しています。lockfileは名称2箇所のみ変更し、依存関係全体が一致しています。
 
-サービステンプレートとsetupのサービス名を`pi-steward.service`へ変更し、配置先は従来どおりsetupのディレクトリから生成します。package metadata・`.npmrc`の旧名称・旧リポジトリ参照を更新しました。Dependabotは移行元の週次・日本時間09:00・minor/patchグループ設定を維持し、対象を`/pi-steward`へ変更しました。README・AGENTS.mdとルートのサービス一覧・適用範囲を整備しました。
+サービステンプレートとsetupのサービス名を`pi-steward.service`へ変更し、配置先は従来どおりsetupのディレクトリから生成します。package metadata・`.npmrc`の旧名称・旧リポジトリ参照を更新しました。Dependabotは移行元の週次・日本時間09:00の設定を維持し、対象を`/pi-steward`へ変更しました。ユーザー判断により`update-types`を削除し、majorを含むversion updateを同じグループの対象としています。README・AGENTS.mdとルートのサービス一覧・適用範囲を整備しました。
 
 root実行、Node.js 22、Realtime Database、systemd / cronの実行形態、23:10の時刻、同期呼び出し、状態保存、署名、通知の既存挙動を維持します。deploy CIや別基盤への移行は追加していません。
 

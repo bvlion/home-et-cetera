@@ -68,15 +68,20 @@ git diff --check
 
 `npm test`は依存関係と署名の5テストです。認証情報や実機通信は必要ありません。`index.js`や`holiday_notification.js`の通常実行は機器操作・通知を伴うため、構文検査と区別してください。
 
+`pi-steward CI`はmainへのpushとすべてのPull Requestで固定名 `pi-steward-test` を起動します。`pi-steward/`または専用workflowに変更がある場合、Node.js 22で上記のインストール・テスト・Node.js/Bash構文検査・ShellCheckを実行します。無関係な変更では検証をスキップし、変更判定の成功でチェックを成功させます。認証情報やPiへの接続は使用せず、機器操作・デプロイは行いません。
+
 ## 再構築
 
-通常のモノレポ配置例を`/opt/home-et-cetera`とします。以下は配置例であり、本番の固定パスではありません。モノレポをcloneし、`pi-steward/`へ移動してローカル設定と認証JSONを復元します。
+既存のモノレポcheckoutをディレクトリ指定で更新し、その中の`pi-steward/`を使用します。`MONOREPO_DIRECTORY`には利用者が管理する既存checkoutの絶対パスを設定してください。配置先は固定しません。以下は統合PRのマージ後、mainを追跡するcheckoutで実行します。checkoutのない再構築では、利用者が管理する配置先へモノレポをcloneし、そのディレクトリを指定します。
+
+更新後、`pi-steward/`へローカル設定と認証JSONを復元してから、インストール・検証・setup・起動を行います。
 
 ```bash
-cd /opt/home-et-cetera/pi-steward
-npm ci
-npm test
-sudo ./setup.sh
+MONOREPO_DIRECTORY='既存のモノレポcheckoutの絶対パス'
+git -C "${MONOREPO_DIRECTORY}" pull --ff-only
+npm --prefix "${MONOREPO_DIRECTORY}/pi-steward" ci
+npm --prefix "${MONOREPO_DIRECTORY}/pi-steward" test
+sudo "${MONOREPO_DIRECTORY}/pi-steward/setup.sh"
 sudo systemctl start pi-steward.service
 sudo systemctl status pi-steward.service
 ```
@@ -92,7 +97,7 @@ root実行、`ExecStart=/usr/local/bin/node index.js`、`Restart=on-failure`、`
 PR #19マージ後のPiでは既に秘密情報がローカル設定へ分離されています。モノレポ統合PRのマージ後、Piを更新する際は次の順序で切り替えます。23:10のcron実行と重なる時刻は避けます。
 
 1. 旧配置の`.env`、`firebase-adminsdk.json`、`monitor_state.json`、systemd設定、root crontabをリポジトリ外へバックアップします。外部Pythonスクリプトとその依存環境も維持できることを確認します。
-2. モノレポを通常の配置先へcloneし、`pi-steward/`へ`.env`と認証JSONをコピーします。権限600を確認し、`npm ci`と`npm test`を実行します。設定名と値はPR #19のものをそのまま使います。外部Pythonスクリプトを移す場合だけ`PC_SWITCH_SCRIPT_PATH`を更新します。
+2. 既存のモノレポcheckoutを`MONOREPO_DIRECTORY`で指定し、`git -C "${MONOREPO_DIRECTORY}" pull --ff-only`で統合PRマージ後のmainを取り込みます。`${MONOREPO_DIRECTORY}/pi-steward/`へ`.env`と認証JSONをコピーします。権限600を確認し、`npm ci`と`npm test`を実行します。設定名と値はPR #19のものをそのまま使います。外部Pythonスクリプトを移す場合だけ`PC_SWITCH_SCRIPT_PATH`を更新します。
 3. `sudo systemctl stop BvlionBatch3.service`、`sudo systemctl disable BvlionBatch3.service`で旧サービスを停止・無効化します。`sudo crontab -e`で旧配置の`holiday_notification.js`を呼ぶ23:10の行だけを削除し、他ジョブを維持します。
 4. 旧サービス停止後の最新の`monitor_state.json`を`pi-steward/`へコピーします。存在しない場合は新規環境と同じ初期化動作になります。既存状態がある場合は引き継いでください。
 5. 新配置の`pi-steward/`で`sudo ./setup.sh`、`sudo systemctl start pi-steward.service`を実行します。
@@ -103,7 +108,15 @@ PR #19マージ後のPiでは既に秘密情報がローカル設定へ分離さ
 
 切り戻す場合は、新サービスを停止・無効化し、新配置のcron行だけを削除します。停止後の最新のモニター状態を旧配置へ戻し、バックアップした旧cron行を復元し、旧サービスを有効化・起動します。二重起動を避ける順序は切り替え時と同じです。
 
-移行後の更新はモノレポを更新し、`pi-steward/`で`npm ci`、`npm test`を実行してから`sudo systemctl restart pi-steward.service`で行います。配置・サービス設定を変更した場合は再起動前に`sudo ./setup.sh`を再実行します。
+移行後も同じcheckoutをディレクトリ指定して更新します。配置・サービス設定を変更した場合は再起動前に`sudo ./setup.sh`を再実行します。
+
+```bash
+MONOREPO_DIRECTORY='既存のモノレポcheckoutの絶対パス'
+git -C "${MONOREPO_DIRECTORY}" pull --ff-only
+npm --prefix "${MONOREPO_DIRECTORY}/pi-steward" ci
+npm --prefix "${MONOREPO_DIRECTORY}/pi-steward" test
+sudo systemctl restart pi-steward.service
+```
 
 ## 外部ローカル依存
 
@@ -115,8 +128,8 @@ PR #19マージ後のPiでは既に秘密情報がローカル設定へ分離さ
 
 ## 実機確認とarchive判断
 
-[Issue #85の確定コメント](https://github.com/bvlion/home-et-cetera/issues/85#issuecomment-6030557385)では、PR #19マージ後の旧配置でsystemd / cron、service active、PCスイッチとモニターの一連動作、通知、Sesameを確認済みとしています。カーテン、morning処理、翌日通知cronは通常運用で確認し、追加の強制実行は行いません。
+[Issue #85の移行時の確認方針](docs/issue-85-migration.md)では、PR #19マージ後の旧配置でsystemd / cron、service active、PCスイッチとモニターの一連動作、通知、Sesameを確認済みとしています。今回の移行でのカーテン、morning処理、翌日通知cronは通常運用で確認し、追加の強制実行は行いません。
 
-この確認は移行元の実機確認です。改名後のモノレポ配置でのPi切り替えは別の運用作業であり、実施・確認結果が記録されるまで「切り替え済み」とは扱いません。切り替え時は上記のサービス・cron・状態引き継ぎを確認し、機能確認は確定済みの通常運用方針を維持します。
+この確認は移行元の実機確認です。改名後のモノレポ配置でのPi切り替えは別の運用作業であり、実施・確認結果が記録されるまで「切り替え済み」とは扱いません。切り替え時は上記のサービス・cron・状態引き継ぎを確認し、機能確認は今回の移行時に確定した通常運用方針を維持します。
 
 旧privateリポジトリは、モノレポPRのマージ、Piの配置・サービス・cronの切り替え確認、ローカル設定・認証JSON・外部Python依存・必要なstateのバックアップ、旧配置への運用依存の解消を記録した後にarchive可能です。切り替え前の現時点ではarchiveを保留します。archive後も旧秘密情報がGit履歴に残るためprivateを維持します。archive操作自体はIssue #85のスコープ外です。
