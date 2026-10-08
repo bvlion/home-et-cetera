@@ -20,7 +20,7 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Set up gcloud
       uses: google-github-actions/setup-gcloud@v3
