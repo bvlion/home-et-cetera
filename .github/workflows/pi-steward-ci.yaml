@@ -26,7 +26,7 @@ jobs:
             should-verify-pi-steward:
               - 'pi-steward/**'
               - '.github/workflows/pi-steward-ci.yaml'
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v6
         if: steps.filter.outputs.should-verify-pi-steward == 'true'
         with:
           node-version: '22'
