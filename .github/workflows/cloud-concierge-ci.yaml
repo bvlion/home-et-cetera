@@ -43,7 +43,7 @@ jobs:
 
     - name: Cache node_modules dev packages
       if: steps.filter.outputs.should-verify-cloud-concierge == 'true'
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/node_modules
         key: ${{ runner.os }}-cloud-concierge-node-dev-${{ hashFiles('cloud-concierge/functions/package-lock.json') }}
