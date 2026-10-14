@@ -20,7 +20,7 @@
   "devDependencies": {
     "esbuild": "0.28.2",
     "jsdom": "30.1.2",
-    "firebase-tools": "15.32.1"
+    "firebase-tools": "15.33.0"
   },
   "overrides": {
     "@grpc/grpc-js": "1.14.5"
