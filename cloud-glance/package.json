@@ -13,7 +13,7 @@
     "test:emulators": "node tests/run-emulators.js"
   },
   "dependencies": {
-    "firebase": "12.19.0",
+    "firebase": "13.0.0",
     "marked": "18.0.14",
     "dompurify": "3.4.16"
   },
