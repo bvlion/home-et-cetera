@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "esbuild": "0.28.2",
-    "jsdom": "30.1.2",
+    "jsdom": "30.1.3",
     "firebase-tools": "15.32.1"
   },
   "overrides": {
