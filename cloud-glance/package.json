@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "firebase": "12.19.0",
-    "marked": "18.0.14",
+    "marked": "18.1.1",
     "dompurify": "3.4.16"
   },
   "devDependencies": {
