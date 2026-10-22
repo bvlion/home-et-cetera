@@ -21,7 +21,7 @@ beforeEach(async () => {
   stylesheet.textContent = styles;
   window.document.head.appendChild(stylesheet);
   calls = [];
-  auth = { currentUser: { getIdToken: async () => 'fictional-token' } };
+  auth = { currentUser: { uid: 'fictional-user', getIdToken: async () => 'fictional-token' } };
   fetchResponse = { ok: true, answer: '**架空の回答**', citations: [] };
   pendingOperation = undefined;
   window.marked = marked;
@@ -171,6 +171,47 @@ test('回答取得時点の質問を共有し、編集した質問とは組み�
   assert.equal(payload.answer, '**架空の回答**');
 });
 
+test('同じタブでは認証と利用許可の確認後に直近の表示を復元する', async () => {
+  fetchResponse = { ok: true, answer: '**一時保存する架空の回答**', citations: [
+    { url: 'https://example.invalid/source', title: '架空の出典', startIndex: 0, endIndex: 0 }
+  ] };
+  window.document.getElementById('question').value = '一時保存する架空の質問';
+  window.document.getElementById('askForm').dispatchEvent(new window.Event('submit', { cancelable: true }));
+  await new Promise(resolve => setImmediate(resolve));
+  const saved = JSON.parse(window.sessionStorage.getItem('cloud-glance-view-state'));
+  assert.equal(saved.userId, 'fictional-user');
+  assert.equal(saved.question, '一時保存する架空の質問');
+
+  await authListener(auth.currentUser);
+  assert.equal(window.document.getElementById('question').value, '一時保存する架空の質問');
+  assert.equal(window.document.querySelector('#answer strong').textContent, '一時保存する架空の回答');
+  assert.equal(window.document.querySelector('#citations a').textContent, '架空の出典');
+  assert.equal(window.document.getElementById('answerPanel').hidden, false);
+  assert.equal(window.document.getElementById('share').disabled, false);
+});
+
+test('通常の新しいタブには別タブの一時表示を引き継がない', () => {
+  window.sessionStorage.setItem('cloud-glance-view-state', JSON.stringify({ answer: '架空の回答' }));
+  const newTab = new JSDOM(html, { url: 'https://example.invalid' }).window;
+  try {
+    assert.equal(newTab.sessionStorage.getItem('cloud-glance-view-state'), null);
+    assert.equal(newTab.document.getElementById('answerPanel').hidden, true);
+  } finally {
+    newTab.close();
+  }
+});
+
+test('別の利用者として許可されても保存済みの回答を表示しない', async () => {
+  window.sessionStorage.setItem('cloud-glance-view-state', JSON.stringify({
+    userId: 'another-user', question: '表示しない質問', answer: '表示しない回答', citations: []
+  }));
+  await authListener(auth.currentUser);
+  assert.equal(window.document.getElementById('askForm').hidden, false);
+  assert.equal(window.document.getElementById('answerPanel').hidden, true);
+  assert.equal(window.document.getElementById('answer').textContent, '');
+  assert.equal(window.document.getElementById('share').disabled, true);
+});
+
 test('本文内と回答下の出典リンクを表示し、Unicodeの出典位置を維持する', async () => {
   fetchResponse = { ok: true, answer: '😀説明 **出典**', citations: [
     { url: 'https://example.invalid/source', title: '架空の出典', startIndex: 6, endIndex: 8 }
@@ -211,6 +252,7 @@ test('クリアは質問・回答・出典・通知・共有状態を消す', as
   assert.equal(window.document.getElementById('question').value, '');
   assert.equal(window.document.getElementById('answerPanel').hidden, true);
   assert.equal(window.document.getElementById('share').disabled, true);
+  assert.equal(window.sessionStorage.getItem('cloud-glance-view-state'), null);
 });
 
 test('次の質問が失敗した場合は前の回答と質問の共有を維持する', async () => {
@@ -283,10 +325,15 @@ test('認証状態が失われた後に返る回答を表示しない', async ()
 });
 
 test('許可確認で拒否された利用者には質問フォームを表示しない', async () => {
+  window.sessionStorage.setItem('cloud-glance-view-state', JSON.stringify({
+    userId: 'fictional-user', question: '表示しない質問', answer: '表示しない回答', citations: []
+  }));
   window.fetch = async () => ({ ok: false, json: async () => ({ error: '架空の許可エラー' }) });
   await authListener(auth.currentUser);
   assert.equal(window.document.getElementById('askForm').hidden, true);
   assert.equal(window.document.getElementById('share').disabled, true);
+  assert.equal(window.document.getElementById('answerPanel').hidden, true);
+  assert.equal(window.document.getElementById('answer').textContent, '');
   assert.equal(window.document.getElementById('error').textContent, '架空の許可エラー');
   assert.equal(window.getComputedStyle(window.document.getElementById('login')).display, 'inline-flex');
   assert.equal(window.getComputedStyle(window.document.getElementById('clear')).display, 'none');

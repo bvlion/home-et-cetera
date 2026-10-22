@@ -20,9 +20,9 @@ let currentAnswer = '';
 let currentCitations = [];
 let isAuthorized = false;
 let auth;
+const viewStateKey = 'cloud-glance-view-state';
 
-clearButton.addEventListener('click', function () {
-  if (askButton.disabled) return;
+function clearView() {
   questionInput.value = '';
   currentQuestion = '';
   currentAnswer = '';
@@ -34,6 +34,52 @@ clearButton.addEventListener('click', function () {
   shareStatusMessage.textContent = '';
   errorMessage.textContent = '';
   shareButton.disabled = true;
+}
+
+function saveViewState(user) {
+  try {
+    sessionStorage.setItem(viewStateKey, JSON.stringify({
+      userId: user.uid,
+      question: currentQuestion,
+      answer: currentAnswer,
+      citations: currentCitations
+    }));
+  } catch {
+    // 一時保存が利用できない環境でも、ページ内では従来どおり回答を表示する。
+  }
+}
+
+function removeViewState() {
+  try {
+    sessionStorage.removeItem(viewStateKey);
+  } catch {
+    // 一時保存が利用できない環境でも、ページ内の表示はクリアする。
+  }
+}
+
+function restoreViewState(user) {
+  let state;
+  try {
+    state = JSON.parse(sessionStorage.getItem(viewStateKey));
+  } catch {
+    removeViewState();
+    return;
+  }
+  if (!state || state.userId !== user.uid || typeof state.question !== 'string' ||
+      typeof state.answer !== 'string' || !state.answer || !Array.isArray(state.citations)) return;
+  currentQuestion = state.question;
+  currentAnswer = state.answer;
+  currentCitations = state.citations;
+  questionInput.value = currentQuestion;
+  renderCitations(currentCitations);
+  answerPanel.hidden = false;
+  shareButton.disabled = false;
+}
+
+clearButton.addEventListener('click', function () {
+  if (askButton.disabled) return;
+  removeViewState();
+  clearView();
   questionInput.focus();
 });
 
@@ -63,6 +109,7 @@ askForm.addEventListener('submit', async function (event) {
     currentCitations = result.citations || [];
     renderCitations(currentCitations);
     answerPanel.hidden = false;
+    saveViewState(user);
   } catch (error) {
     if (!isAuthorized || auth.currentUser !== user) return;
     errorMessage.textContent = error.message || '回答を取得できませんでした。';
@@ -213,16 +260,7 @@ try {
     clearButton.disabled = true;
     shareButton.disabled = true;
     askForm.hidden = true;
-    answerPanel.hidden = true;
-    currentQuestion = '';
-    currentAnswer = '';
-    currentCitations = [];
-    questionInput.value = '';
-    answerElement.replaceChildren();
-    citationsList.replaceChildren();
-    statusMessage.textContent = '';
-    shareStatusMessage.textContent = '';
-    errorMessage.textContent = '';
+    clearView();
     loginButton.hidden = Boolean(user);
     clearButton.hidden = true;
     loginButton.disabled = false;
@@ -241,6 +279,7 @@ try {
       askForm.hidden = false;
       askButton.disabled = false;
       clearButton.disabled = false;
+      restoreViewState(user);
       questionInput.focus();
     } catch (error) {
       if (auth.currentUser !== user) return;
