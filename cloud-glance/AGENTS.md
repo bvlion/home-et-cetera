@@ -9,7 +9,7 @@
 - CSS・JavaScriptをHTMLへ埋め込みません。フロントエンドは `frontend/`、ビルド成果物は未追跡の `dist/` に置きます。
 - 各サーバー処理でGoogleのIDトークンとSecret Managerのallowlistを検証します。ブラウザーの状態だけを信用しません。
 - APIキー・Webhook・allowlist・地域情報・Slackの投稿設定はSecret Managerで管理します。本番値をソース・文書・Issue・PR・fixture・ログへ記録しません。
-- 質問・回答・出典・IDトークンを独自の履歴、データベース、ブラウザーの永続ストレージ、ログへ保存しません。Firebase Authenticationの認証状態はSDKで管理します。
+- 質問・回答・出典・IDトークンを独自の履歴、データベース、ブラウザーの永続ストレージ、ログへ保存しません。質問・回答・出典は、同じタブでの再読み込みから直近の表示を復元する目的に限り `sessionStorage` へ一時保持できます。Firebase Authenticationの認証状態はSDKで管理します。
 - Responses APIの `gpt-6-luna`、`reasoning.effort: low`、`store: false`、自動Web検索、`Asia/Tokyo` を維持します。継続会話を追加しません。
 - Slackへは共有操作があった場合だけ投稿し、回答取得時点の質問と組み合わせます。移行元のMarkdown・出典・クリア・処理中の操作制限を維持します。
 - 確認はこのディレクトリで `npm ci`、`npm --prefix functions ci`、`npm run check`、`npm run test:emulators` を実行します。エミュレーター検証は `demo-cloud-glance` と架空値だけを使用します。
